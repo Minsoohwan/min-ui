@@ -9,6 +9,7 @@ export interface ButtonProps
   text?: string;
   width?: React.CSSProperties["width"];
   visible?: boolean;
+  validationMessages?: string[] | null | undefined;
   onInitialized?: (el: HTMLButtonElement | null) => void;
 }
 
@@ -22,6 +23,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       width,
       visible = true,
       disabled,
+      validationMessages,
       onInitialized,
       ...rest
     }: ButtonProps,
@@ -46,7 +48,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           "bg-transparent text-zinc-900 border border-zinc-300 hover:bg-zinc-50",
       },
     };
-    const mode = outline ? "outline" : "solid";
+    const mode = React.useMemo(
+      () => (outline ? "outline" : "solid"),
+      [outline]
+    );
+    const isInvalid = React.useMemo(
+      () => Array.isArray(validationMessages) && validationMessages.length > 0,
+      [validationMessages]
+    );
     const isDisabled = Boolean(disabled);
     const disabledClasses = isDisabled
       ? "opacity-60 pointer-events-none cursor-not-allowed"
@@ -72,15 +81,28 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }, []);
 
     return (
-      <button
-        ref={setRefs}
-        disabled={isDisabled}
-        className={`${base} ${styles[variant][mode]} ${disabledClasses} ${visible ? "" : "invisible"} ${className}`.trim()}
-        style={computedStyle}
-        {...rest}
-      >
-        {text}
-      </button>
+      <div className={className} style={{ width: computedStyle.width }}>
+        <button
+          ref={setRefs}
+          disabled={isDisabled}
+          className={`${base} ${styles[variant][mode]} ${disabledClasses} ${visible ? "" : "invisible"} ${
+            isInvalid ? "ring-1 ring-red-500" : ""
+          }`.trim()}
+          style={{ ...computedStyle, width: "100%" }}
+          {...rest}
+        >
+          {text}
+        </button>
+        {isInvalid ? (
+          <div className="mt-1 space-y-0.5">
+            {validationMessages!.map((msg, idx) => (
+              <div key={idx} className="text-xs text-red-600">
+                {msg}
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
     );
   }
 );
