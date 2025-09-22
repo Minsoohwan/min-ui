@@ -1,6 +1,6 @@
 import React from "react";
 
-export type ButtonVariant = "primary" | "negative" | "default";
+export type ButtonVariant = "primary" | "negative" | "default" | "custom";
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -11,12 +11,13 @@ export interface ButtonProps
   visible?: boolean;
   validationMessages?: string[] | null | undefined;
   onInitialized?: (el: HTMLButtonElement | null) => void;
+  color?: string;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
-      variant = "primary",
+      variant = "custom",
       outline = false,
       text = "Button",
       className = "",
@@ -25,6 +26,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       disabled,
       validationMessages,
       onInitialized,
+      color,
       ...rest
     }: ButtonProps,
     ref
@@ -46,6 +48,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         solid: "bg-zinc-100 text-zinc-900 hover:bg-zinc-200",
         outline:
           "bg-transparent text-zinc-900 border border-zinc-300 hover:bg-zinc-50",
+      },
+      custom: {
+        solid: "",
+        outline: "",
       },
     };
     const mode = React.useMemo(
@@ -88,7 +94,17 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           className={`${base} ${styles[variant][mode]} ${disabledClasses} ${visible ? "" : "invisible"} ${
             isInvalid ? "ring-1 ring-red-500" : ""
           }`.trim()}
-          style={{ ...computedStyle, width: "100%" }}
+          style={{
+            ...computedStyle,
+            width: "100%",
+            ...(variant === "custom" &&
+              color && {
+                backgroundColor: outline ? "transparent" : color,
+                color: outline ? color : "white",
+                borderColor: color,
+                borderWidth: outline ? "1px" : undefined,
+              }),
+          }}
           {...rest}
         >
           {text}
