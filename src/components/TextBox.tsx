@@ -74,8 +74,10 @@ export const TextBox = React.forwardRef<HTMLInputElement, TextBoxProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const isInvalid =
-      Array.isArray(validationMessages) && validationMessages.length > 0;
+    const isInvalid = React.useMemo(
+      () => Array.isArray(validationMessages) && validationMessages.length > 0,
+      [validationMessages]
+    );
 
     return (
       <div className={className} style={{ width: computedStyle.width }}>

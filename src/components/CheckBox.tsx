@@ -12,6 +12,7 @@ export interface CheckBoxProps
   enableThreeState?: boolean;
   label?: React.ReactNode;
   onInitialized?: (el: HTMLInputElement | null) => void;
+  validationMessages?: string[] | undefined | null;
 }
 
 export const CheckBox = React.forwardRef<HTMLInputElement, CheckBoxProps>(
@@ -29,6 +30,7 @@ export const CheckBox = React.forwardRef<HTMLInputElement, CheckBoxProps>(
       onInitialized,
       style,
       label,
+      validationMessages = [], // 추가
       ...rest
     },
     ref
@@ -66,12 +68,19 @@ export const CheckBox = React.forwardRef<HTMLInputElement, CheckBoxProps>(
       onChange?.(e);
     };
 
+    const isInvalid = React.useMemo(
+      () => Array.isArray(validationMessages) && validationMessages.length > 0,
+      [validationMessages]
+    );
     const base = "inline-flex items-center gap-2 select-none text-sm";
-    const boxClass = `${
+    const boxClass = [
+      "border",
       disabled
         ? "opacity-60 cursor-not-allowed pointer-events-none"
-        : "cursor-pointer"
-    }`;
+        : "cursor-pointer",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     const innerRef = React.useRef<HTMLInputElement | null>(null);
     const setRefs = (node: HTMLInputElement | null) => {
@@ -94,32 +103,42 @@ export const CheckBox = React.forwardRef<HTMLInputElement, CheckBoxProps>(
     }, [enableThreeState, triState]);
 
     return (
-      <label
-        className={`${base} ${visible ? "" : "invisible"} ${className}`.trim()}
-        style={{ width: computedStyle.width }}
-      >
-        <span className="relative inline-flex items-center">
-          <input
-            ref={setRefs}
-            type="checkbox"
-            checked={Boolean(triState)}
-            onChange={handleChange}
-            disabled={disabled}
-            className={boxClass}
-            style={{ ...computedStyle, width: undefined }}
-            {...rest}
-          />
-          {isIndeterminateVisual ? (
-            <span
-              aria-hidden
-              className={`pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-1/2 w-1/2 ${
-                disabled ? "bg-zinc-300" : "bg-blue-500"
-              }`}
+      <div style={{ width: computedStyle.width }}>
+        <label
+          className={`${base} ${visible ? "" : "invisible"} ${className}`.trim()}
+        >
+          <span className="relative inline-flex items-center">
+            <input
+              ref={setRefs}
+              type="checkbox"
+              checked={Boolean(triState)}
+              onChange={handleChange}
+              disabled={disabled}
+              className={boxClass}
+              style={{ ...computedStyle, width: undefined }}
+              {...rest}
             />
-          ) : null}
-        </span>
-        {label}
-      </label>
+            {isIndeterminateVisual ? (
+              <span
+                aria-hidden
+                className={`pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-1/2 w-1/2 ${
+                  disabled ? "bg-zinc-300" : "bg-blue-500"
+                }`}
+              />
+            ) : null}
+          </span>
+          {label}
+        </label>
+        {isInvalid ? (
+          <div className="mt-1 space-y-0.5">
+            {validationMessages!.map((msg, idx) => (
+              <div key={idx} className="text-xs text-red-600">
+                {msg}
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
     );
   }
 );

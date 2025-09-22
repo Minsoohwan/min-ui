@@ -13,10 +13,12 @@ const meta: Meta<typeof CheckBox> = {
     height: "fit-content",
     value: false,
     enableThreeState: false,
+    validationMessages: [],
   },
   argTypes: {
     onChange: { action: "change" },
     onInitialized: { action: "initialized" },
+    validationMessages: { control: "object" },
   },
 };
 
@@ -45,4 +47,8 @@ export const Sized: Story = {
 
 export const Indeterminate: Story = {
   args: { enableThreeState: true, value: null, label: "부분 선택" },
+};
+
+export const WithValidation: Story = {
+  args: { validationMessages: ["유효하지 않습니다."] },
 };

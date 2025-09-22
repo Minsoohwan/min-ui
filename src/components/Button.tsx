@@ -48,9 +48,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           "bg-transparent text-zinc-900 border border-zinc-300 hover:bg-zinc-50",
       },
     };
-    const mode = outline ? "outline" : "solid";
-    const isInvalid =
-      Array.isArray(validationMessages) && validationMessages.length > 0;
+    const mode = React.useMemo(
+      () => (outline ? "outline" : "solid"),
+      [outline]
+    );
+    const isInvalid = React.useMemo(
+      () => Array.isArray(validationMessages) && validationMessages.length > 0,
+      [validationMessages]
+    );
     const isDisabled = Boolean(disabled);
     const disabledClasses = isDisabled
       ? "opacity-60 pointer-events-none cursor-not-allowed"
