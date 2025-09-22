@@ -11,9 +11,11 @@ const meta: Meta<typeof Button> = {
     outline: false,
     width: "fit-content",
     visible: true,
+    validationMessages: null,
   },
   argTypes: {
     onInitialized: { action: "initialized" },
+    validationMessages: { control: "object" },
   },
 };
 
@@ -30,4 +32,8 @@ export const Negative: Story = {
 
 export const Default: Story = {
   args: { variant: "default" },
+};
+
+export const WithValidation: Story = {
+  args: { validationMessages: ["유효하지 않습니다."] },
 };

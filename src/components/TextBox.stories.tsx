@@ -12,10 +12,12 @@ const meta: Meta<typeof TextBox> = {
     width: "fit-content",
     height: "fit-content",
     text: "",
+    validationMessages: null,
   },
   argTypes: {
     onChange: { action: "change" },
     onInitialized: { action: "initialized" },
+    validationMessages: { control: "object" },
   },
 };
 
