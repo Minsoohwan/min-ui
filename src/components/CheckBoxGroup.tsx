@@ -1,0 +1,114 @@
+import React from "react";
+import CheckBox from "./CheckBox";
+
+export interface CheckBoxGroupItem {
+  value: any;
+  display: string;
+  visible?: boolean;
+  disabled?: boolean;
+}
+
+export interface CheckBoxGroupProps {
+  value?: Record<string, boolean | null>;
+  items: CheckBoxGroupItem[];
+  validationMessages?: string[];
+  onChange?: (value: Record<string, boolean | null>) => void;
+  visible?: boolean;
+  width?: React.CSSProperties["width"];
+  height?: React.CSSProperties["height"];
+  enableThreeState?: boolean;
+  onInitialized?: (elements: HTMLInputElement[]) => void;
+  disabled?: boolean;
+}
+
+export const CheckBoxGroup = React.forwardRef<
+  HTMLDivElement,
+  CheckBoxGroupProps
+>(
+  (
+    {
+      value = {},
+      items = [],
+      validationMessages = [],
+      onChange,
+      visible = true,
+      width,
+      height,
+      enableThreeState = false,
+      onInitialized,
+      disabled = false,
+    },
+    ref
+  ) => {
+    const [elements, setElements] = React.useState<HTMLInputElement[]>([]);
+    const isValid = React.useMemo(
+      () => validationMessages.length === 0,
+      [validationMessages]
+    );
+
+    React.useEffect(() => {
+      if (elements.length === items.length) {
+        onInitialized?.(elements);
+      }
+    }, [elements, items.length, onInitialized]);
+
+    const handleChange =
+      (itemValue: any) => (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = {
+          ...value,
+          [itemValue]:
+            enableThreeState && value[itemValue] === false
+              ? null
+              : e.target.checked,
+        };
+        onChange?.(newValue);
+      };
+
+    const handleInitialized =
+      (index: number) => (el: HTMLInputElement | null) => {
+        if (el) {
+          setElements((prev) => {
+            const next = [...prev];
+            next[index] = el;
+            return next;
+          });
+        }
+      };
+
+    if (!visible) return null;
+
+    return (
+      <div
+        ref={ref}
+        className={`flex flex-col gap-2`}
+        style={{ width, height }}
+      >
+        {items.map((item, index) => (
+          <CheckBox
+            key={item.value}
+            label={item.display}
+            value={value[item.value] ?? null}
+            onChange={handleChange(item.value)}
+            visible={visible || item.visible}
+            disabled={disabled || item.disabled}
+            enableThreeState={enableThreeState}
+            onInitialized={handleInitialized(index)}
+          />
+        ))}
+        {!isValid && (
+          <div className="mt-1 space-y-0.5">
+            {validationMessages.map((msg, idx) => (
+              <div key={idx} className="text-xs text-red-600">
+                {msg}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+CheckBoxGroup.displayName = "CheckBoxGroup";
+
+export default CheckBoxGroup;
