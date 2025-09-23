@@ -10,6 +10,7 @@ const meta: Meta<typeof CheckBoxGroup> = {
   parameters: {
     layout: "centered",
   },
+  tags: ["autodocs"],
   decorators: [
     (Story) => (
       <div style={{ padding: "1rem" }}>
@@ -17,6 +18,18 @@ const meta: Meta<typeof CheckBoxGroup> = {
       </div>
     ),
   ],
+  argTypes: {
+    onChange: { action: "changed" },
+    direction: {
+      control: "radio",
+      options: ["horizontal", "vertical"],
+      description: "Layout direction of checkboxes",
+    },
+    gap: {
+      control: "text",
+      description: 'CSS gap value (e.g., "1rem", "10px")',
+    },
+  },
 };
 
 export default meta;
@@ -145,6 +158,49 @@ export const WithCustomWidth: Story = {
           action("onChange")(newValue);
           setValue(newValue);
         }}
+      />
+    );
+  },
+};
+
+export const HorizontalLayout: Story = {
+  render: () => {
+    const [value, setValue] = React.useState<Record<string, boolean | null>>({
+      "1": true,
+      "2": false,
+      "3": false,
+    });
+    return (
+      <CheckBoxGroup
+        items={items}
+        value={value}
+        onChange={(newValue) => {
+          action("onChange")(newValue);
+          setValue(newValue);
+        }}
+        direction="horizontal"
+        gap="2rem"
+      />
+    );
+  },
+};
+
+export const CustomGap: Story = {
+  render: () => {
+    const [value, setValue] = React.useState<Record<string, boolean | null>>({
+      "1": true,
+      "2": false,
+      "3": false,
+    });
+    return (
+      <CheckBoxGroup
+        items={items}
+        value={value}
+        onChange={(newValue) => {
+          action("onChange")(newValue);
+          setValue(newValue);
+        }}
+        gap="3rem"
       />
     );
   },
