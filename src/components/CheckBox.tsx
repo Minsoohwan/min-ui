@@ -1,4 +1,5 @@
 import React from "react";
+import ValidationMessages from "./ValidationMessages";
 
 export interface CheckBoxProps
   extends Omit<
@@ -129,15 +130,7 @@ export const CheckBox = React.forwardRef<HTMLInputElement, CheckBoxProps>(
           </span>
           {label}
         </label>
-        {isInvalid ? (
-          <div className="mt-1 space-y-0.5">
-            {validationMessages!.map((msg, idx) => (
-              <div key={idx} className="text-xs text-red-600">
-                {msg}
-              </div>
-            ))}
-          </div>
-        ) : null}
+        <ValidationMessages visible={isInvalid} messages={validationMessages} />
       </div>
     );
   }
