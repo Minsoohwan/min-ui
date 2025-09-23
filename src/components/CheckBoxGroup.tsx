@@ -11,7 +11,7 @@ export interface CheckBoxGroupItem {
 
 export interface CheckBoxGroupProps {
   value?: Record<string, boolean | null>;
-  items: CheckBoxGroupItem[];
+  items: CheckBoxGroupItem[] | (string | number)[];
   validationMessages?: string[];
   onChange?: (value: Record<string, boolean | null>) => void;
   visible?: boolean;
@@ -80,6 +80,18 @@ export const CheckBoxGroup = React.forwardRef<
         }
       };
 
+    const processedItems = React.useMemo(() => {
+      return items.map((item): CheckBoxGroupItem => {
+        if (typeof item === "object" && item !== null) {
+          return item as CheckBoxGroupItem;
+        }
+        return {
+          value: item,
+          display: String(item),
+        };
+      });
+    }, [items]);
+
     if (!visible) return null;
 
     return (
@@ -94,7 +106,7 @@ export const CheckBoxGroup = React.forwardRef<
           ...(gap ? { gap } : {}),
         }}
       >
-        {items.map((item, index) => (
+        {processedItems.map((item, index) => (
           <CheckBox
             key={item.value}
             label={item.display}
