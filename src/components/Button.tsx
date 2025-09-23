@@ -1,4 +1,5 @@
 import React from "react";
+import ValidationMessages from "./ValidationMessages";
 
 export type ButtonVariant = "primary" | "negative" | "default" | "custom";
 
@@ -109,15 +110,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         >
           {text}
         </button>
-        {isInvalid ? (
-          <div className="mt-1 space-y-0.5">
-            {validationMessages!.map((msg, idx) => (
-              <div key={idx} className="text-xs text-red-600">
-                {msg}
-              </div>
-            ))}
-          </div>
-        ) : null}
+        <ValidationMessages visible={isInvalid} messages={validationMessages} />
       </div>
     );
   }

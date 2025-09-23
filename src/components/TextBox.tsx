@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import ValidationMessages from "./ValidationMessages";
 
 export interface TextBoxProps
   extends Omit<
@@ -92,15 +93,7 @@ export const TextBox = React.forwardRef<HTMLInputElement, TextBoxProps>(
           placeholder={placeholder}
           {...rest}
         />
-        {isInvalid ? (
-          <div className="mt-1 space-y-0.5">
-            {validationMessages!.map((msg, idx) => (
-              <div key={idx} className="text-xs text-red-600">
-                {msg}
-              </div>
-            ))}
-          </div>
-        ) : null}
+        <ValidationMessages visible={isInvalid} messages={validationMessages} />
       </div>
     );
   }

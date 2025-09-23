@@ -1,5 +1,6 @@
 import React from "react";
 import CheckBox from "./CheckBox";
+import ValidationMessages from "./ValidationMessages";
 
 export interface CheckBoxGroupItem {
   value: any;
@@ -41,8 +42,8 @@ export const CheckBoxGroup = React.forwardRef<
     ref
   ) => {
     const [elements, setElements] = React.useState<HTMLInputElement[]>([]);
-    const isValid = React.useMemo(
-      () => validationMessages.length === 0,
+    const isInvalid = React.useMemo(
+      () => Array.isArray(validationMessages) && validationMessages.length > 0,
       [validationMessages]
     );
 
@@ -95,15 +96,7 @@ export const CheckBoxGroup = React.forwardRef<
             onInitialized={handleInitialized(index)}
           />
         ))}
-        {!isValid && (
-          <div className="mt-1 space-y-0.5">
-            {validationMessages.map((msg, idx) => (
-              <div key={idx} className="text-xs text-red-600">
-                {msg}
-              </div>
-            ))}
-          </div>
-        )}
+        <ValidationMessages visible={isInvalid} messages={validationMessages} />
       </div>
     );
   }
