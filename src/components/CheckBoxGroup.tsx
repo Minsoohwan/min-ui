@@ -20,6 +20,8 @@ export interface CheckBoxGroupProps {
   enableThreeState?: boolean;
   onInitialized?: (elements: HTMLInputElement[]) => void;
   disabled?: boolean;
+  direction?: "horizontal" | "vertical";
+  gap?: string;
 }
 
 export const CheckBoxGroup = React.forwardRef<
@@ -38,6 +40,8 @@ export const CheckBoxGroup = React.forwardRef<
       enableThreeState = false,
       onInitialized,
       disabled = false,
+      direction = "vertical",
+      gap,
     },
     ref
   ) => {
@@ -81,8 +85,14 @@ export const CheckBoxGroup = React.forwardRef<
     return (
       <div
         ref={ref}
-        className={`flex flex-col gap-2`}
-        style={{ width, height }}
+        className={`flex ${
+          direction === "horizontal" ? "flex-row" : "flex-col"
+        } ${gap ? "" : "gap-2"}`}
+        style={{
+          width,
+          height,
+          ...(gap ? { gap } : {}),
+        }}
       >
         {items.map((item, index) => (
           <CheckBox
