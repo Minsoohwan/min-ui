@@ -101,7 +101,7 @@ export const CheckBoxGroup = React.forwardRef<
           direction === "horizontal" ? "flex-row" : "flex-col"
         } ${gap ? "" : "gap-2"}`}
         style={{
-          width,
+          width: width ?? "100%",
           height,
           ...(gap ? { gap } : {}),
         }}

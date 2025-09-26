@@ -70,7 +70,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const computedStyle: React.CSSProperties = {
       ...rest.style,
-      ...(width != null ? { width } : {}),
+      ...(width != null ? { width } : { width: "100%" }),
     };
 
     const innerRef = React.useRef<HTMLButtonElement | null>(null);

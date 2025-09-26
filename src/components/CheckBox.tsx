@@ -38,7 +38,7 @@ export const CheckBox = React.forwardRef<HTMLInputElement, CheckBoxProps>(
   ) => {
     const computedStyle: React.CSSProperties = {
       ...style,
-      ...(width != null ? { width } : {}),
+      ...(width != null ? { width } : { width: "100%" }),
       ...(height != null ? { height } : {}),
     };
 

@@ -584,7 +584,7 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
     };
 
     const computedStyle: React.CSSProperties = {
-      width,
+      width: width ?? "100%",
       height,
       maxHeight: height || 300,
       overflowY: "auto",
