@@ -147,7 +147,7 @@ export const SelectBox = React.forwardRef<
 
     const computedStyle: React.CSSProperties = {
       ...style,
-      ...(width != null ? { width } : {}),
+      ...(width != null ? { width } : { width: "100%" }),
       ...(height != null ? { height } : {}),
     };
 

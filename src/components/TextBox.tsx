@@ -43,7 +43,7 @@ export const TextBox = React.forwardRef<HTMLInputElement, TextBoxProps>(
 
     const computedStyle: React.CSSProperties = {
       ...style,
-      ...(width != null ? { width } : {}),
+      ...(width != null ? { width } : { width: "100%" }),
       ...(height != null ? { height } : {}),
     };
 
