@@ -18,6 +18,19 @@ const meta: Meta<typeof CheckBoxGroup> = {
       </div>
     ),
   ],
+  args: {
+    items: [
+      { value: "1", display: "Option 1" },
+      { value: "2", display: "Option 2" },
+      { value: "3", display: "Option 3" },
+    ],
+    direction: "vertical",
+    gap: "0.5rem",
+    width: "fit-content",
+    height: "fit-content",
+    disabled: false,
+    enableThreeState: false,
+  },
   argTypes: {
     onChange: { action: "changed" },
     direction: {
@@ -29,20 +42,32 @@ const meta: Meta<typeof CheckBoxGroup> = {
       control: "text",
       description: 'CSS gap value (e.g., "1rem", "10px")',
     },
+    items: {
+      control: "object",
+      description: "Array of items to display as checkboxes",
+    },
+    width: {
+      control: "text",
+      description: "Width of the checkbox group (CSS value)",
+      table: {
+        type: { summary: "string | number" },
+      },
+    },
+    height: {
+      control: "text",
+      description: "Height of the checkbox group (CSS value)",
+      table: {
+        type: { summary: "string | number" },
+      },
+    },
   },
 };
 
 export default meta;
 type Story = StoryObj<typeof CheckBoxGroup>;
 
-const items = [
-  { value: "1", display: "Option 1" },
-  { value: "2", display: "Option 2" },
-  { value: "3", display: "Option 3" },
-];
-
 export const Default: Story = {
-  render: function Render() {
+  render: function Render(args) {
     const [value, setValue] = React.useState<Record<string, boolean | null>>({
       "1": false,
       "2": true,
@@ -50,18 +75,36 @@ export const Default: Story = {
     });
 
     const handleChange: CheckBoxGroupProps["onChange"] = (newValue) => {
-      action("onChange")(newValue);
+      args.onChange?.(newValue);
       setValue(newValue);
     };
 
     return (
-      <CheckBoxGroup items={items} value={value} onChange={handleChange} />
+      <CheckBoxGroup
+        items={args.items}
+        {...(args.direction && { direction: args.direction })}
+        {...(args.gap && { gap: args.gap })}
+        width={args.width}
+        height={args.height}
+        {...(args.disabled !== undefined && { disabled: args.disabled })}
+        {...(args.enableThreeState !== undefined && {
+          enableThreeState: args.enableThreeState,
+        })}
+        {...(args.validationMessages && {
+          validationMessages: args.validationMessages,
+        })}
+        value={value}
+        onChange={handleChange}
+      />
     );
   },
 };
 
 export const WithValidation: Story = {
-  render: function Render() {
+  args: {
+    validationMessages: ["Please select at least one option"],
+  },
+  render: function Render(args) {
     const [value, setValue] = React.useState<Record<string, boolean | null>>({
       "1": false,
       "2": false,
@@ -69,23 +112,36 @@ export const WithValidation: Story = {
     });
 
     const handleChange: CheckBoxGroupProps["onChange"] = (newValue) => {
-      action("onChange")(newValue);
+      args.onChange?.(newValue);
       setValue(newValue);
     };
 
     return (
       <CheckBoxGroup
-        items={items}
+        items={args.items}
+        {...(args.direction && { direction: args.direction })}
+        {...(args.gap && { gap: args.gap })}
+        width={args.width}
+        height={args.height}
+        {...(args.disabled !== undefined && { disabled: args.disabled })}
+        {...(args.enableThreeState !== undefined && {
+          enableThreeState: args.enableThreeState,
+        })}
+        {...(args.validationMessages && {
+          validationMessages: args.validationMessages,
+        })}
         value={value}
         onChange={handleChange}
-        validationMessages={["Please select at least one option"]}
       />
     );
   },
 };
 
 export const ThreeState: Story = {
-  render: () => {
+  args: {
+    enableThreeState: true,
+  },
+  render: (args) => {
     const [value, setValue] = React.useState<Record<string, boolean | null>>({
       "1": true,
       "2": null,
@@ -93,33 +149,63 @@ export const ThreeState: Story = {
     });
     return (
       <CheckBoxGroup
-        items={items}
+        items={args.items}
+        {...(args.direction && { direction: args.direction })}
+        {...(args.gap && { gap: args.gap })}
+        width={args.width}
+        height={args.height}
+        {...(args.disabled !== undefined && { disabled: args.disabled })}
+        {...(args.enableThreeState !== undefined && {
+          enableThreeState: args.enableThreeState,
+        })}
+        {...(args.validationMessages && {
+          validationMessages: args.validationMessages,
+        })}
         value={value}
         onChange={(newValue) => {
-          action("onChange")(newValue);
+          args.onChange?.(newValue);
           setValue(newValue);
         }}
-        enableThreeState
       />
     );
   },
 };
 
 export const Disabled: Story = {
-  render: function Render() {
+  args: {
+    disabled: true,
+  },
+  render: function Render(args) {
     return (
       <CheckBoxGroup
-        items={items}
+        items={args.items}
+        {...(args.direction && { direction: args.direction })}
+        {...(args.gap && { gap: args.gap })}
+        width={args.width}
+        height={args.height}
+        {...(args.disabled !== undefined && { disabled: args.disabled })}
+        {...(args.enableThreeState !== undefined && {
+          enableThreeState: args.enableThreeState,
+        })}
+        {...(args.validationMessages && {
+          validationMessages: args.validationMessages,
+        })}
         value={{ "1": true, "2": false, "3": true }}
-        disabled
-        onChange={(value) => action("onChange")(value)}
+        onChange={(value) => args.onChange?.(value)}
       />
     );
   },
 };
 
 export const WithSomeDisabled: Story = {
-  render: () => {
+  args: {
+    items: [
+      { value: "1", display: "Option 1" },
+      { value: "2", display: "Option 2", disabled: true },
+      { value: "3", display: "Option 3" },
+    ],
+  },
+  render: (args) => {
     const [value, setValue] = React.useState<Record<string, boolean | null>>({
       "1": true,
       "2": false,
@@ -127,14 +213,21 @@ export const WithSomeDisabled: Story = {
     });
     return (
       <CheckBoxGroup
-        items={[
-          { value: "1", display: "Option 1" },
-          { value: "2", display: "Option 2", disabled: true },
-          { value: "3", display: "Option 3" },
-        ]}
+        items={args.items}
+        {...(args.direction && { direction: args.direction })}
+        {...(args.gap && { gap: args.gap })}
+        width={args.width}
+        height={args.height}
+        {...(args.disabled !== undefined && { disabled: args.disabled })}
+        {...(args.enableThreeState !== undefined && {
+          enableThreeState: args.enableThreeState,
+        })}
+        {...(args.validationMessages && {
+          validationMessages: args.validationMessages,
+        })}
         value={value}
         onChange={(newValue) => {
-          action("onChange")(newValue);
+          args.onChange?.(newValue);
           setValue(newValue);
         }}
       />
@@ -143,7 +236,10 @@ export const WithSomeDisabled: Story = {
 };
 
 export const WithCustomWidth: Story = {
-  render: () => {
+  args: {
+    width: 300,
+  },
+  render: (args) => {
     const [value, setValue] = React.useState<Record<string, boolean | null>>({
       "1": true,
       "2": false,
@@ -151,11 +247,21 @@ export const WithCustomWidth: Story = {
     });
     return (
       <CheckBoxGroup
-        items={items}
+        items={args.items}
+        {...(args.direction && { direction: args.direction })}
+        {...(args.gap && { gap: args.gap })}
+        width={args.width}
+        height={args.height}
+        {...(args.disabled !== undefined && { disabled: args.disabled })}
+        {...(args.enableThreeState !== undefined && {
+          enableThreeState: args.enableThreeState,
+        })}
+        {...(args.validationMessages && {
+          validationMessages: args.validationMessages,
+        })}
         value={value}
-        width={300}
         onChange={(newValue) => {
-          action("onChange")(newValue);
+          args.onChange?.(newValue);
           setValue(newValue);
         }}
       />
@@ -164,7 +270,11 @@ export const WithCustomWidth: Story = {
 };
 
 export const HorizontalLayout: Story = {
-  render: () => {
+  args: {
+    direction: "horizontal",
+    gap: "2rem",
+  },
+  render: (args) => {
     const [value, setValue] = React.useState<Record<string, boolean | null>>({
       "1": true,
       "2": false,
@@ -172,21 +282,33 @@ export const HorizontalLayout: Story = {
     });
     return (
       <CheckBoxGroup
-        items={items}
+        items={args.items}
+        {...(args.direction && { direction: args.direction })}
+        {...(args.gap && { gap: args.gap })}
+        width={args.width}
+        height={args.height}
+        {...(args.disabled !== undefined && { disabled: args.disabled })}
+        {...(args.enableThreeState !== undefined && {
+          enableThreeState: args.enableThreeState,
+        })}
+        {...(args.validationMessages && {
+          validationMessages: args.validationMessages,
+        })}
         value={value}
         onChange={(newValue) => {
-          action("onChange")(newValue);
+          args.onChange?.(newValue);
           setValue(newValue);
         }}
-        direction="horizontal"
-        gap="2rem"
       />
     );
   },
 };
 
 export const CustomGap: Story = {
-  render: () => {
+  args: {
+    gap: "3rem",
+  },
+  render: (args) => {
     const [value, setValue] = React.useState<Record<string, boolean | null>>({
       "1": true,
       "2": false,
@@ -194,13 +316,23 @@ export const CustomGap: Story = {
     });
     return (
       <CheckBoxGroup
-        items={items}
+        items={args.items}
+        {...(args.direction && { direction: args.direction })}
+        {...(args.gap && { gap: args.gap })}
+        width={args.width}
+        height={args.height}
+        {...(args.disabled !== undefined && { disabled: args.disabled })}
+        {...(args.enableThreeState !== undefined && {
+          enableThreeState: args.enableThreeState,
+        })}
+        {...(args.validationMessages && {
+          validationMessages: args.validationMessages,
+        })}
         value={value}
         onChange={(newValue) => {
-          action("onChange")(newValue);
+          args.onChange?.(newValue);
           setValue(newValue);
         }}
-        gap="3rem"
       />
     );
   },
