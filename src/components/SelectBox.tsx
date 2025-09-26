@@ -25,7 +25,10 @@ export interface SelectBoxProps
   disabled?: boolean;
 }
 
-export const SelectBox = React.forwardRef<HTMLDivElement, SelectBoxProps>(
+export const SelectBox = React.forwardRef<
+  HTMLDivElement | HTMLSelectElement,
+  SelectBoxProps
+>(
   (
     {
       items,
@@ -173,7 +176,6 @@ export const SelectBox = React.forwardRef<HTMLDivElement, SelectBoxProps>(
             ref={containerRef}
             style={{ ...computedStyle, width: undefined, position: "relative" }}
             className="flex-grow"
-            {...rest}
           >
             <button
               type="button"
