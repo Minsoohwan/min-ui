@@ -1,0 +1,13 @@
+/* Min-UI ValidationMessages Component Styles */
+
+.min-ui-validation-messages {
+  margin-top: var(--min-ui-spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--min-ui-spacing-xs);
+}
+
+.min-ui-validation-message {
+  font-size: var(--min-ui-text-xs);
+  color: var(--min-ui-color-negative-hover);
+}

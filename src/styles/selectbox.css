@@ -1,0 +1,173 @@
+/* Min-UI SelectBox Component Styles */
+
+.min-ui-selectbox-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.min-ui-selectbox-wrapper {
+  width: fit-content;
+  min-width: 120px;
+}
+
+.min-ui-selectbox-dropdown-container {
+  position: relative;
+}
+
+.min-ui-selectbox-arrow {
+  margin-left: var(--min-ui-spacing-xl);
+  width: 1.5em;
+  height: 1.5em;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.min-ui-selectbox-arrow-open {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 12 4-4 4 4'/%3e%3c/svg%3e");
+}
+
+.min-ui-selectbox-item-disabled {
+  cursor: not-allowed;
+}
+
+.min-ui-selectbox {
+  flex-grow: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  background-color: white;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s ease-in-out;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.min-ui-selectbox:focus {
+  border-color: #a1a1aa;
+}
+
+.min-ui-selectbox:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f4f4f5;
+}
+
+.min-ui-selectbox option {
+  padding: 0.5rem 0.75rem;
+  background-color: white;
+  color: #18181b;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.min-ui-selectbox option:hover {
+  background-color: #f8fafc;
+}
+
+.min-ui-selectbox option:checked {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.min-ui-selectbox-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  background-color: white;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s ease-in-out;
+  cursor: pointer;
+  text-align: left;
+}
+
+.min-ui-selectbox-button:focus {
+  border-color: #a1a1aa;
+}
+
+.min-ui-selectbox-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f4f4f5;
+}
+
+.min-ui-selectbox-text {
+  display: inline-block;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.min-ui-selectbox-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
+  z-index: 50;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  max-height: 15rem;
+  overflow: hidden;
+}
+
+.min-ui-selectbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #18181b;
+  overflow: hidden;
+}
+
+.min-ui-selectbox-item:hover {
+  background-color: #f8fafc;
+}
+
+.min-ui-selectbox-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.min-ui-selectbox-checkbox {
+  margin-right: 0.5rem;
+}
+
+.min-ui-selectbox-checkbox .min-ui-checkbox-container {
+  padding: 0.25rem 0;
+  overflow: hidden;
+}
+
+.min-ui-selectbox-checkbox .min-ui-checkbox-label-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.min-ui-selectbox-item-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

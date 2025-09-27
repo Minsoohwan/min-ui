@@ -32,14 +32,13 @@ export const TextBox = React.forwardRef<HTMLInputElement, TextBoxProps>(
     },
     ref
   ) => {
-    const base =
-      "block rounded px-3 py-2 text-sm outline-none transition-colors border w-full";
-    const normal = "border-zinc-300 focus:border-zinc-400";
-    const error = "border-red-500 focus:border-red-600";
+    const base = "min-ui-textbox";
+    const normal = "";
+    const error = "min-ui-textbox-error";
     const disabledCls = disabled
-      ? "opacity-60 cursor-not-allowed pointer-events-none bg-zinc-100"
+      ? "min-ui-opacity-60 min-ui-cursor-not-allowed min-ui-pointer-events-none"
       : "";
-    const readOnlyCls = readOnly ? "cursor-default bg-zinc-50" : "";
+    const readOnlyCls = readOnly ? "min-ui-cursor-default" : "";
 
     const computedStyle: React.CSSProperties = {
       ...style,
@@ -81,13 +80,16 @@ export const TextBox = React.forwardRef<HTMLInputElement, TextBoxProps>(
     );
 
     return (
-      <div className={className} style={{ width: computedStyle.width }}>
+      <div
+        className={`min-ui-textbox-wrapper ${className}`}
+        style={{ width: computedStyle.width }}
+      >
         <input
           ref={setRefs}
           disabled={disabled}
           readOnly={readOnly}
           className={`${base} ${isInvalid ? error : normal} ${disabledCls} ${readOnlyCls}`.trim()}
-          style={{ ...computedStyle, width: "100%" }}
+          style={{ height: computedStyle.height }}
           value={value}
           onChange={handleChange}
           placeholder={placeholder}

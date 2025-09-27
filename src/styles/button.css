@@ -1,0 +1,90 @@
+/* Min-UI Button Component Styles */
+
+.min-ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--min-ui-radius-md);
+  padding: var(--min-ui-spacing-md) var(--min-ui-spacing-lg);
+  font-size: var(--min-ui-text-sm);
+  font-weight: var(--min-ui-font-medium);
+  transition: colors var(--min-ui-transition-fast);
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.min-ui-button-wrapper {
+  width: 100%;
+}
+
+.min-ui-button:disabled {
+  opacity: var(--min-ui-opacity-disabled);
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.min-ui-button-primary {
+  background-color: var(--min-ui-color-primary);
+  color: var(--min-ui-color-white);
+}
+
+.min-ui-button-primary:hover:not(:disabled) {
+  background-color: var(--min-ui-color-primary-hover);
+}
+
+.min-ui-button-primary-outline {
+  background-color: transparent;
+  color: var(--min-ui-color-primary-hover);
+  border: 1px solid var(--min-ui-color-primary-hover);
+}
+
+.min-ui-button-primary-outline:hover:not(:disabled) {
+  background-color: var(--min-ui-color-primary-light);
+}
+
+.min-ui-button-negative {
+  background-color: var(--min-ui-color-negative);
+  color: var(--min-ui-color-white);
+}
+
+.min-ui-button-negative:hover:not(:disabled) {
+  background-color: var(--min-ui-color-negative-hover);
+}
+
+.min-ui-button-negative-outline {
+  background-color: transparent;
+  color: var(--min-ui-color-negative-hover);
+  border: 1px solid var(--min-ui-color-negative-hover);
+}
+
+.min-ui-button-negative-outline:hover:not(:disabled) {
+  background-color: var(--min-ui-color-negative-light);
+}
+
+.min-ui-button-default {
+  background-color: var(--min-ui-bg-default);
+  color: var(--min-ui-text-primary);
+}
+
+.min-ui-button-default:hover:not(:disabled) {
+  background-color: var(--min-ui-bg-default-hover);
+}
+
+.min-ui-button-default-outline {
+  background-color: transparent;
+  color: var(--min-ui-text-primary);
+  border: 1px solid var(--min-ui-color-gray-200);
+}
+
+.min-ui-button-default-outline:hover:not(:disabled) {
+  background-color: var(--min-ui-bg-readonly);
+}
+
+.min-ui-button-invalid {
+  box-shadow: 0 0 0 1px var(--min-ui-color-negative);
+}
+
+.min-ui-button-invisible {
+  visibility: hidden;
+}

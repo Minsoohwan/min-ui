@@ -43,6 +43,7 @@
 
     "emitDeclarationOnly": false,
     "esModuleInterop": true,
-    "moduleResolution": "bundler",
-  }
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*", "src/types/**/*"]
 }

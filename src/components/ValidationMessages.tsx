@@ -15,9 +15,9 @@ export const ValidationMessages: React.FC<ValidationMessagesProps> = ({
     return null;
 
   return (
-    <div className={`mt-1 space-y-0.5 ${className}`.trim()}>
+    <div className={`min-ui-validation-messages ${className}`.trim()}>
       {messages.map((msg, idx) => (
-        <div key={idx} className="text-xs text-red-600">
+        <div key={idx} className="min-ui-validation-message">
           {msg}
         </div>
       ))}
