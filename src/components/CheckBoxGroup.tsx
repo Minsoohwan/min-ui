@@ -97,9 +97,11 @@ export const CheckBoxGroup = React.forwardRef<
     return (
       <div
         ref={ref}
-        className={`flex ${
-          direction === "horizontal" ? "flex-row" : "flex-col"
-        } ${gap ? "" : "gap-2"}`}
+        className={`min-ui-checkboxgroup-wrapper min-ui-checkboxgroup ${
+          direction === "horizontal"
+            ? "min-ui-checkboxgroup-horizontal"
+            : "min-ui-checkboxgroup-vertical"
+        } ${gap ? "" : "min-ui-gap-2"}`}
         style={{
           width: width ?? "100%",
           height,

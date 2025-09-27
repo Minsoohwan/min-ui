@@ -73,12 +73,13 @@ export const CheckBox = React.forwardRef<HTMLInputElement, CheckBoxProps>(
       () => Array.isArray(validationMessages) && validationMessages.length > 0,
       [validationMessages]
     );
-    const base = "inline-flex items-center gap-2 select-none text-sm";
+    const base = "min-ui-checkbox-container";
     const boxClass = [
-      "border",
+      "min-ui-checkbox",
       disabled
-        ? "opacity-60 cursor-not-allowed pointer-events-none"
-        : "cursor-pointer",
+        ? "min-ui-opacity-60 min-ui-cursor-not-allowed min-ui-pointer-events-none"
+        : "min-ui-cursor-pointer",
+      isInvalid ? "error" : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -104,11 +105,14 @@ export const CheckBox = React.forwardRef<HTMLInputElement, CheckBoxProps>(
     }, [enableThreeState, triState]);
 
     return (
-      <div style={{ width: computedStyle.width }}>
+      <div
+        className="min-ui-checkbox-wrapper"
+        style={{ width: computedStyle.width }}
+      >
         <label
-          className={`${base} ${visible ? "" : "invisible"} ${className}`.trim()}
+          className={`${base} min-ui-checkbox-label ${visible ? "" : "min-ui-invisible"} ${disabled ? "disabled" : ""} ${className}`.trim()}
         >
-          <span className="relative inline-flex items-center">
+          <span className="min-ui-relative min-ui-inline-flex min-ui-items-center">
             <input
               ref={setRefs}
               type="checkbox"
@@ -116,19 +120,19 @@ export const CheckBox = React.forwardRef<HTMLInputElement, CheckBoxProps>(
               onChange={handleChange}
               disabled={disabled}
               className={boxClass}
-              style={{ ...computedStyle, width: undefined }}
+              style={{ ...computedStyle, width: undefined, height: undefined }}
               {...rest}
             />
             {isIndeterminateVisual ? (
               <span
                 aria-hidden
-                className={`pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-1/2 w-1/2 ${
-                  disabled ? "bg-zinc-300" : "bg-blue-500"
+                className={`min-ui-checkbox-indeterminate ${
+                  disabled ? "disabled" : ""
                 }`}
               />
             ) : null}
           </span>
-          {label}
+          <span className="min-ui-checkbox-label-text">{label}</span>
         </label>
         <ValidationMessages visible={isInvalid} messages={validationMessages} />
       </div>

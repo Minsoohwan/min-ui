@@ -1,5 +1,6 @@
 import React from "react";
 import ValidationMessages from "./ValidationMessages";
+import CheckBox from "./CheckBox";
 
 export interface SelectBoxItem {
   value: any;
@@ -147,7 +148,7 @@ export const SelectBox = React.forwardRef<
 
     const computedStyle: React.CSSProperties = {
       ...style,
-      ...(width != null ? { width } : { width: "100%" }),
+      ...(width != null ? { width } : {}),
       ...(height != null ? { height } : {}),
     };
 
@@ -168,45 +169,34 @@ export const SelectBox = React.forwardRef<
     return (
       <div
         ref={setRefs}
-        style={{ width: computedStyle.width }}
-        className={className + "flex flex-col"}
+        style={computedStyle}
+        className={`min-ui-selectbox-wrapper ${className} min-ui-selectbox-container`}
       >
         {multiple ? (
           <div
             ref={containerRef}
-            style={{ ...computedStyle, width: undefined, position: "relative" }}
-            className="flex-grow"
+            className="min-ui-selectbox-dropdown-container"
+            style={{ height: computedStyle.height }}
           >
             <button
               type="button"
               onClick={() => setIsOpen((s) => !s)}
               disabled={disabled}
-              className="inline-flex items-center justify-between w-full border px-3 py-2 bg-white"
+              className="min-ui-selectbox-button"
               aria-haspopup="listbox"
               aria-expanded={isOpen}
             >
+              <span className="min-ui-selectbox-text">{selectedLabels}</span>
               <span
-                style={{
-                  display: "inline-block",
-                  flex: 1,
-                  minWidth: 0,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-                className="overflow-hidden text-ellipsis"
-              >
-                {selectedLabels}
-              </span>
-              <span style={{ marginLeft: 8 }}>{isOpen ? "▲" : "▼"}</span>
+                className={`min-ui-selectbox-arrow ${isOpen ? "min-ui-selectbox-arrow-open" : ""}`}
+              />
             </button>
 
             {isOpen && (
               <div
                 role="listbox"
                 aria-multiselectable
-                className="absolute left-0 right-0 mt-1 z-50 border bg-white shadow max-h-60 overflow-auto"
-                style={{ maxHeight: 240 }}
+                className="min-ui-selectbox-dropdown"
               >
                 {processedItems.map((it, idx) => {
                   if (it.visible === false) return null;
@@ -215,55 +205,94 @@ export const SelectBox = React.forwardRef<
                     Array.isArray(internalValue) &&
                     internalValue.indexOf(stringVal) >= 0;
                   return (
-                    <label
+                    <div
                       key={idx}
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50"
-                      style={{
-                        cursor:
-                          it.disabled || disabled ? "not-allowed" : "pointer",
-                      }}
+                      className={`min-ui-selectbox-item ${it.disabled || disabled ? "min-ui-selectbox-item-disabled" : ""}`}
                     >
-                      <input
-                        type="checkbox"
+                      <CheckBox
                         checked={checked}
                         disabled={disabled || it.disabled}
                         onChange={() => handleCheckboxToggle(stringVal)}
+                        label={it.display}
+                        width="auto"
+                        className="min-ui-selectbox-checkbox"
                       />
-                      <span>{it.display}</span>
-                    </label>
+                    </div>
                   );
                 })}
               </div>
             )}
           </div>
         ) : (
-          <select
-            ref={(node) => {
-              // keep innerRef for onInitialized, while outer ref is the container
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (innerRef as any).current = node;
-            }}
-            className="flex-grow"
-            multiple={false}
-            value={internalValue as any}
-            onChange={handleSelectChange}
-            disabled={disabled}
-            style={{ ...computedStyle, width: undefined }}
-            {...rest}
+          <div
+            ref={containerRef}
+            className="min-ui-selectbox-dropdown-container"
+            style={{ height: computedStyle.height }}
           >
-            {!multiple && <option value="">--</option>}
-            {processedItems.map((it, idx) =>
-              it.visible === false ? null : (
-                <option
-                  key={idx}
-                  value={String(it.value)}
-                  disabled={it.disabled}
-                >
-                  {it.display}
-                </option>
-              )
+            <button
+              type="button"
+              onClick={() => setIsOpen((s) => !s)}
+              disabled={disabled}
+              className="min-ui-selectbox-button"
+              aria-haspopup="listbox"
+              aria-expanded={isOpen}
+            >
+              <span className="min-ui-selectbox-text">
+                {processedItems.find(
+                  (it) => String(it.value) === String(internalValue)
+                )?.display || "--"}
+              </span>
+              <span
+                className={`min-ui-selectbox-arrow ${isOpen ? "min-ui-selectbox-arrow-open" : ""}`}
+              />
+            </button>
+
+            {isOpen && (
+              <div role="listbox" className="min-ui-selectbox-dropdown">
+                {processedItems.map((it, idx) => {
+                  if (it.visible === false) return null;
+                  const stringVal = String(it.value);
+                  const checked = String(internalValue) === stringVal;
+                  return (
+                    <div
+                      key={idx}
+                      className={`min-ui-selectbox-item ${it.disabled || disabled ? "min-ui-selectbox-item-disabled" : ""}`}
+                      onClick={() => {
+                        if (!it.disabled && !disabled) {
+                          setInternalValue(stringVal);
+                          onChange?.(
+                            stringVal === "" ? null : parseValue(stringVal)
+                          );
+                          setIsOpen(false);
+                        }
+                      }}
+                    >
+                      {multiple ? (
+                        <CheckBox
+                          checked={checked}
+                          disabled={disabled || it.disabled}
+                          onChange={() => {
+                            setInternalValue(stringVal);
+                            onChange?.(
+                              stringVal === "" ? null : parseValue(stringVal)
+                            );
+                            setIsOpen(false);
+                          }}
+                          label={it.display}
+                          width="auto"
+                          className="min-ui-selectbox-checkbox"
+                        />
+                      ) : (
+                        <span className="min-ui-selectbox-item-label">
+                          {it.display}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
-          </select>
+          </div>
         )}
         <ValidationMessages visible={isInvalid} messages={validationMessages} />
       </div>

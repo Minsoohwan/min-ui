@@ -909,3 +909,212 @@ export const LargeTree: Story = {
     );
   },
 };
+
+export const EllipsisWithLongLabels: Story = {
+  args: {
+    data: [
+      {
+        id: "1",
+        label:
+          "This is a very long root node label that should be truncated with ellipsis",
+        expanded: true,
+        children: [
+          {
+            id: "1-1",
+            label:
+              "This is an extremely long child node label that definitely exceeds the container width",
+            expanded: true,
+            children: [
+              {
+                id: "1-1-1",
+                label:
+                  "Super duper extremely long grandchild node label that needs ellipsis truncation",
+              },
+              {
+                id: "1-1-2",
+                label:
+                  "Another very long grandchild node label for testing ellipsis functionality",
+              },
+              {
+                id: "1-1-3",
+                label: "Short",
+              },
+            ],
+          },
+          {
+            id: "1-2",
+            label: "Medium length child node",
+            children: [
+              {
+                id: "1-2-1",
+                label:
+                  "This is another very long grandchild node label that should be truncated",
+              },
+              {
+                id: "1-2-2",
+                label: "Normal length",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "2",
+        label:
+          "Another root node with a very long label that should be truncated",
+        children: [
+          {
+            id: "2-1",
+            label:
+              "Child node with extremely long label that exceeds container width",
+          },
+          {
+            id: "2-2",
+            label: "Short child",
+          },
+        ],
+      },
+    ],
+    showCheckboxes: true,
+    selectMode: "multiple",
+    width: "200px",
+  },
+  render: (args) => {
+    const [selectedIds, setSelectedIds] = React.useState<string[]>([
+      "1-1-1",
+      "2-1",
+    ]);
+    return (
+      <div style={{ padding: "20px", border: "1px dashed #ccc" }}>
+        <h4>Tree with Long Labels (Width: 200px)</h4>
+        <Tree
+          {...(args.data && { data: args.data })}
+          {...(args.selectMode !== undefined && {
+            selectMode: args.selectMode,
+          })}
+          {...(args.disabled !== undefined && { disabled: args.disabled })}
+          {...(args.expandable !== undefined && {
+            expandable: args.expandable,
+          })}
+          {...(args.showCheckboxes !== undefined && {
+            showCheckboxes: args.showCheckboxes,
+          })}
+          {...(args.indentSize && { indentSize: args.indentSize })}
+          {...(args.width && { width: args.width })}
+          {...(args.height && { height: args.height })}
+          {...(args.validationMessages && {
+            validationMessages: args.validationMessages,
+          })}
+          value={selectedIds}
+          onChange={(ids) => {
+            args.onChange?.(ids);
+            setSelectedIds(ids);
+          }}
+        />
+      </div>
+    );
+  },
+};
+
+export const EllipsisComparison: Story = {
+  render: () => {
+    const [selectedIds1, setSelectedIds1] = React.useState<string[]>(["1-1-1"]);
+    const [selectedIds2, setSelectedIds2] = React.useState<string[]>(["2-1"]);
+
+    const longLabelData = [
+      {
+        id: "1",
+        label:
+          "This is a very long root node label that should be truncated with ellipsis",
+        expanded: true,
+        children: [
+          {
+            id: "1-1",
+            label:
+              "This is an extremely long child node label that definitely exceeds the container width",
+            expanded: true,
+            children: [
+              {
+                id: "1-1-1",
+                label:
+                  "Super duper extremely long grandchild node label that needs ellipsis truncation",
+              },
+              {
+                id: "1-1-2",
+                label:
+                  "Another very long grandchild node label for testing ellipsis functionality",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "2",
+        label:
+          "Another root node with a very long label that should be truncated",
+        children: [
+          {
+            id: "2-1",
+            label:
+              "Child node with extremely long label that exceeds container width",
+          },
+        ],
+      },
+    ];
+
+    return (
+      <div
+        style={{
+          padding: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "20px",
+        }}
+      >
+        <h3>Tree Ellipsis Comparison</h3>
+
+        <div style={{ border: "1px dashed #ccc", padding: "15px" }}>
+          <h4>Narrow Width (150px)</h4>
+          <Tree
+            data={longLabelData}
+            selectMode="multiple"
+            showCheckboxes={true}
+            width="150px"
+            value={selectedIds1}
+            onChange={(ids) => {
+              setSelectedIds1(ids);
+            }}
+          />
+        </div>
+
+        <div style={{ border: "1px dashed #ccc", padding: "15px" }}>
+          <h4>Medium Width (250px)</h4>
+          <Tree
+            data={longLabelData}
+            selectMode="multiple"
+            showCheckboxes={true}
+            width="250px"
+            value={selectedIds2}
+            onChange={(ids) => {
+              setSelectedIds2(ids);
+            }}
+          />
+        </div>
+
+        <div style={{ border: "1px dashed #ccc", padding: "15px" }}>
+          <h4>Wide Width (400px)</h4>
+          <Tree
+            data={longLabelData}
+            selectMode="multiple"
+            showCheckboxes={true}
+            width="400px"
+            value={selectedIds1}
+            onChange={(ids) => {
+              setSelectedIds1(ids);
+            }}
+          />
+        </div>
+      </div>
+    );
+  },
+};

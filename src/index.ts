@@ -1,3 +1,6 @@
+// Import CSS styles
+import "./styles/components.css";
+
 export { Button } from "./components/Button";
 export type { ButtonProps, ButtonVariant } from "./components/Button";
 export { TextBox } from "./components/TextBox";

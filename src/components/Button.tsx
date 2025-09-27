@@ -32,23 +32,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }: ButtonProps,
     ref
   ) => {
-    const base =
-      "inline-flex items-center justify-center rounded px-3 py-2 text-sm font-medium transition-colors";
+    const base = "min-ui-button";
     const styles: Record<ButtonVariant, { solid: string; outline: string }> = {
       primary: {
-        solid: "bg-blue-500 text-white hover:bg-blue-600",
-        outline:
-          "bg-transparent text-blue-600 border border-blue-600 hover:bg-blue-50",
+        solid: "min-ui-button-primary",
+        outline: "min-ui-button-primary-outline",
       },
       negative: {
-        solid: "bg-red-500 text-white hover:bg-red-600",
-        outline:
-          "bg-transparent text-red-600 border border-red-600 hover:bg-red-50",
+        solid: "min-ui-button-negative",
+        outline: "min-ui-button-negative-outline",
       },
       default: {
-        solid: "bg-zinc-100 text-zinc-900 hover:bg-zinc-200",
-        outline:
-          "bg-transparent text-zinc-900 border border-zinc-300 hover:bg-zinc-50",
+        solid: "min-ui-button-default",
+        outline: "min-ui-button-default-outline",
       },
       custom: {
         solid: "",
@@ -65,7 +61,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     );
     const isDisabled = Boolean(disabled);
     const disabledClasses = isDisabled
-      ? "opacity-60 pointer-events-none cursor-not-allowed"
+      ? "min-ui-opacity-60 min-ui-pointer-events-none min-ui-cursor-not-allowed"
       : "";
 
     const computedStyle: React.CSSProperties = {
@@ -88,16 +84,17 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }, []);
 
     return (
-      <div className={className} style={{ width: computedStyle.width }}>
+      <div
+        className={`min-ui-button-wrapper ${className}`}
+        style={{ width: computedStyle.width }}
+      >
         <button
           ref={setRefs}
           disabled={isDisabled}
-          className={`${base} ${styles[variant][mode]} ${disabledClasses} ${visible ? "" : "invisible"} ${
-            isInvalid ? "ring-1 ring-red-500" : ""
+          className={`${base} ${styles[variant][mode]} ${disabledClasses} ${visible ? "" : "min-ui-invisible"} ${
+            isInvalid ? "min-ui-button-invalid" : ""
           }`.trim()}
           style={{
-            ...computedStyle,
-            width: "100%",
             ...(variant === "custom" &&
               color && {
                 backgroundColor: outline ? "transparent" : color,

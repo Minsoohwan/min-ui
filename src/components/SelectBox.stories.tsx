@@ -204,3 +204,166 @@ export const WithCustomSize: Story = {
     );
   },
 };
+
+export const EllipsisSingleMode: Story = {
+  args: {
+    items: [
+      { value: "short", display: "Short" },
+      {
+        value: "verylongtext",
+        display:
+          "This is a very long text that should be truncated with ellipsis",
+      },
+      { value: "medium", display: "Medium length text" },
+      {
+        value: "anotherlongone",
+        display: "Another very long text item that exceeds the container width",
+      },
+    ],
+    width: "150px",
+  },
+  render: (args) => {
+    const [val, setVal] = React.useState<string | number | null>(
+      "verylongtext"
+    );
+    return (
+      <div style={{ padding: "20px", border: "1px dashed #ccc" }}>
+        <h4>Single Mode with Ellipsis (Width: 150px)</h4>
+        <SelectBox
+          items={args.items}
+          multiple={args.multiple}
+          disabled={args.disabled}
+          width={args.width}
+          height={args.height}
+          validationMessages={args.validationMessages}
+          value={val}
+          onChange={(v) => {
+            action("onChange")(v);
+            setVal(v);
+          }}
+        />
+      </div>
+    );
+  },
+};
+
+export const EllipsisMultipleMode: Story = {
+  args: {
+    items: [
+      { value: "short", display: "Short" },
+      {
+        value: "verylongtext",
+        display:
+          "This is a very long text that should be truncated with ellipsis",
+      },
+      { value: "medium", display: "Medium length text" },
+      {
+        value: "anotherlongone",
+        display: "Another very long text item that exceeds the container width",
+      },
+      {
+        value: "superlong",
+        display:
+          "Super duper extremely long text that definitely needs ellipsis truncation",
+      },
+    ],
+    multiple: true,
+    width: "200px",
+  },
+  render: (args) => {
+    const [val, setVal] = React.useState<Array<string | number>>([
+      "verylongtext",
+      "anotherlongone",
+    ]);
+    return (
+      <div style={{ padding: "20px", border: "1px dashed #ccc" }}>
+        <h4>Multiple Mode with Ellipsis (Width: 200px)</h4>
+        <SelectBox
+          items={args.items}
+          multiple={args.multiple}
+          disabled={args.disabled}
+          width={args.width}
+          height={args.height}
+          validationMessages={args.validationMessages}
+          value={val}
+          onChange={(v) => {
+            action("onChange")(v);
+            setVal((v as any) ?? []);
+          }}
+        />
+      </div>
+    );
+  },
+};
+
+export const EllipsisComparison: Story = {
+  render: () => {
+    const [val1, setVal1] = React.useState<string | number | null>(
+      "verylongtext"
+    );
+    const [val2, setVal2] = React.useState<Array<string | number>>([
+      "verylongtext",
+      "anotherlongone",
+    ]);
+
+    const longItems = [
+      { value: "short", display: "Short" },
+      {
+        value: "verylongtext",
+        display:
+          "This is a very long text that should be truncated with ellipsis",
+      },
+      { value: "medium", display: "Medium length text" },
+      {
+        value: "anotherlongone",
+        display: "Another very long text item that exceeds the container width",
+      },
+      {
+        value: "superlong",
+        display:
+          "Super duper extremely long text that definitely needs ellipsis truncation",
+      },
+    ];
+
+    return (
+      <div
+        style={{
+          padding: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "20px",
+        }}
+      >
+        <h3>Ellipsis Comparison</h3>
+
+        <div style={{ border: "1px dashed #ccc", padding: "15px" }}>
+          <h4>Single Mode (150px width)</h4>
+          <SelectBox
+            items={longItems}
+            multiple={false}
+            width="150px"
+            value={val1}
+            onChange={(v) => {
+              action("onChange")(v);
+              setVal1(v);
+            }}
+          />
+        </div>
+
+        <div style={{ border: "1px dashed #ccc", padding: "15px" }}>
+          <h4>Multiple Mode (200px width)</h4>
+          <SelectBox
+            items={longItems}
+            multiple={true}
+            width="200px"
+            value={val2}
+            onChange={(v) => {
+              action("onChange")(v);
+              setVal2((v as any) ?? []);
+            }}
+          />
+        </div>
+      </div>
+    );
+  },
+};

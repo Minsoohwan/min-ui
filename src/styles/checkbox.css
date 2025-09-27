@@ -1,0 +1,118 @@
+/* Min-UI CheckBox Component Styles */
+
+.min-ui-checkbox-container {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--min-ui-spacing-sm);
+  user-select: none;
+  font-size: var(--min-ui-text-sm);
+}
+
+.min-ui-checkbox-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.min-ui-checkbox-label {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+}
+
+.min-ui-checkbox-label-text {
+  flex-grow: 1;
+}
+
+.min-ui-checkbox-container.disabled {
+  opacity: var(--min-ui-opacity-disabled);
+  color: var(--min-ui-color-gray-400);
+}
+
+.min-ui-checkbox-container.invisible {
+  visibility: hidden;
+}
+
+.min-ui-checkbox {
+  border: 1px solid var(--min-ui-border-default);
+  width: var(--min-ui-spacing-xl);
+  height: var(--min-ui-spacing-xl);
+  border-radius: var(--min-ui-radius-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.min-ui-checkbox:checked {
+  background-color: var(--min-ui-color-primary);
+  border-color: var(--min-ui-color-primary);
+}
+
+.min-ui-checkbox:checked::after {
+  content: "✓";
+  color: var(--min-ui-color-white);
+  font-size: var(--min-ui-text-xs);
+  font-weight: bold;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+}
+
+.min-ui-checkbox:disabled {
+  opacity: var(--min-ui-opacity-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.min-ui-checkbox.error {
+  border-color: var(--min-ui-color-negative);
+}
+
+.min-ui-checkbox.error:focus {
+  border-color: var(--min-ui-color-negative-hover);
+  box-shadow: 0 0 0 1px var(--min-ui-color-negative);
+}
+
+.min-ui-checkbox-indeterminate {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  height: 8px;
+  width: 8px;
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+.min-ui-checkbox-indeterminate.disabled {
+  background-color: var(--min-ui-border-default);
+}
+
+.min-ui-checkbox-indeterminate:not(.disabled) {
+  background-color: var(--min-ui-color-primary);
+}
+
+/* CheckBoxGroup styles */
+.min-ui-checkboxgroup {
+  display: flex;
+  gap: var(--min-ui-spacing-md);
+}
+
+.min-ui-checkboxgroup-horizontal {
+  flex-direction: row;
+}
+
+.min-ui-checkboxgroup-vertical {
+  flex-direction: column;
+}
+
+.min-ui-checkboxgroup-wrapper {
+  width: 100%;
+}

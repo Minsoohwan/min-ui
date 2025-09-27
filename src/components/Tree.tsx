@@ -1,5 +1,6 @@
 import React from "react";
 import ValidationMessages from "./ValidationMessages";
+import CheckBox from "./CheckBox";
 
 export interface TreeNode {
   id: string;
@@ -448,12 +449,28 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
       const nodeError = errorNodes.get(node.id);
       const indentStyle = { paddingLeft: `${level * indentSize}px` };
 
+      // Calculate indeterminate state for recursive mode
+      const isIndeterminate = (() => {
+        if (selectMode !== "recursive" || !hasChildren) return false;
+
+        const descendantIds = getAllDescendantIds(node);
+        const hasSelectedDescendant = descendantIds.some((id) =>
+          selectedNodes.has(id)
+        );
+        const allDescendantsSelected = descendantIds.every((id) => {
+          const descendantNode = findNode(treeData, id);
+          return descendantNode?.disabled || selectedNodes.has(id);
+        });
+
+        return hasSelectedDescendant && !allDescendantsSelected;
+      })();
+
       return (
-        <div key={node.id} className="tree-node">
+        <div key={node.id} className="min-ui-tree-node">
           <div
-            className={`flex items-center py-1 px-2 hover:bg-gray-50 ${
-              isSelected ? "bg-blue-50 text-blue-600" : ""
-            } ${node.disabled || disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+            className={`min-ui-tree-node-content ${
+              isSelected ? "selected" : ""
+            } ${node.disabled || disabled ? "disabled" : ""}`}
             style={indentStyle}
             onClick={() => {
               if (node.disabled || disabled) return;
@@ -466,35 +483,27 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
             {expandable && (hasChildren || hasChildrenToLoad) ? (
               <button
                 type="button"
-                className={`mr-2 w-4 h-4 flex items-center justify-center ${
-                  node.disabled || disabled
-                    ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
+                className={`min-ui-tree-expand-button ${
+                  isExpanded ? "expanded" : ""
+                } ${node.disabled || disabled ? "" : ""}`}
                 disabled={node.disabled || disabled || isNodeLoading}
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleExpanded(node.id);
                 }}
               >
-                {isNodeLoading ? (
-                  <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                ) : isExpanded ? (
-                  "▼"
-                ) : (
-                  "▶"
+                {isNodeLoading && (
+                  <div className="min-ui-tree-loading-spinner"></div>
                 )}
               </button>
             ) : (
               /* Placeholder for consistent alignment when no expand button */
-              <div className="w-4 h-4 mr-2"></div>
+              <div className="min-ui-tree-expand-placeholder"></div>
             )}
 
             {/* Checkbox */}
             {showCheckboxes && (
-              <input
-                type="checkbox"
-                checked={isSelected}
+              <CheckBox
                 disabled={node.disabled || disabled}
                 onChange={(e) => {
                   e.stopPropagation();
@@ -502,34 +511,39 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
                     toggleSelection(node.id);
                   }
                 }}
-                className="mr-2"
+                width="auto"
+                className="min-ui-tree-checkbox"
+                enableThreeState={selectMode === "recursive"}
+                value={isIndeterminate ? null : isSelected}
               />
             )}
 
             {/* Node Label */}
-            <span className="flex-1">{node.label}</span>
+            <span className="min-ui-tree-label">{node.label}</span>
           </div>
 
           {/* Children */}
           {isExpanded && (
-            <div className="tree-children">
+            <div className="min-ui-tree-children">
               {isNodeLoading ? (
                 <div
-                  className="flex items-center py-1 px-2"
+                  className="min-ui-tree-loading"
                   style={{ paddingLeft: `${(level + 1) * indentSize}px` }}
                 >
-                  <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin mr-2"></div>
-                  <span className="text-gray-500 text-sm">Loading...</span>
+                  <div className="min-ui-tree-loading-spinner"></div>
+                  <span className="min-ui-text-gray-500 min-ui-text-sm">
+                    Loading...
+                  </span>
                 </div>
               ) : nodeError ? (
                 <div
-                  className="flex items-center py-1 px-2 bg-red-500 text-white rounded mx-2 my-1"
+                  className="min-ui-tree-error"
                   style={{ paddingLeft: `${(level + 1) * indentSize}px` }}
                 >
-                  <span className="text-sm">⚠️ {nodeError}</span>
+                  <span className="min-ui-tree-error-text">⚠️ {nodeError}</span>
                   <button
                     type="button"
-                    className="ml-2 text-white hover:text-gray-200 underline text-xs"
+                    className="min-ui-tree-error-retry"
                     onClick={async (e) => {
                       e.stopPropagation();
                       setErrorNodes((prev) => {
@@ -588,32 +602,37 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
 
     const computedStyle: React.CSSProperties = {
       width: width ?? "100%",
-      height,
-      maxHeight: height || 300,
-      overflowY: "auto",
+      height: height || 300,
     };
 
     return (
       <div
         ref={setRefs}
         style={computedStyle}
-        className="border border-gray-300 rounded bg-white"
+        className="min-ui-tree-wrapper min-ui-tree-container"
       >
         {isLoading || loading ? (
-          <div className="flex items-center justify-center p-4">
-            <div className="text-gray-500">Loading...</div>
+          <div className="min-ui-flex min-ui-items-center min-ui-justify-center min-ui-p-4">
+            <div className="min-ui-text-gray-500">Loading...</div>
           </div>
         ) : initialLoadError ? (
-          <div className="flex items-center justify-center p-4">
-            <div className="bg-red-500 text-white rounded p-4 max-w-md">
-              <div className="flex items-center">
-                <span className="text-lg mr-2">⚠️</span>
+          <div className="min-ui-flex min-ui-items-center min-ui-justify-center min-ui-p-4">
+            <div
+              className="min-ui-bg-red-500 min-ui-text-white min-ui-rounded min-ui-p-4"
+              style={{ maxWidth: "28rem" }}
+            >
+              <div className="min-ui-flex min-ui-items-center">
+                <span className="min-ui-text-lg min-ui-mr-2">⚠️</span>
                 <div>
-                  <div className="font-semibold">Failed to load data</div>
-                  <div className="text-sm mt-1">{initialLoadError}</div>
+                  <div className="min-ui-font-semibold">
+                    Failed to load data
+                  </div>
+                  <div className="min-ui-text-sm min-ui-mt-1">
+                    {initialLoadError}
+                  </div>
                   <button
                     type="button"
-                    className="mt-2 text-white hover:text-gray-200 underline text-sm"
+                    className="min-ui-mt-2 min-ui-text-white min-ui-underline min-ui-text-sm"
                     onClick={() => {
                       setInitialLoadError(null);
                       // Retry loading
@@ -654,7 +673,7 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
             </div>
           </div>
         ) : (
-          <div className="tree-container">
+          <div className="min-ui-tree-container">
             {treeData.map((node) => renderNode(node))}
           </div>
         )}
