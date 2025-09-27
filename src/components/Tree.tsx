@@ -463,7 +463,7 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
             }}
           >
             {/* Expand/Collapse Button */}
-            {expandable && (hasChildren || hasChildrenToLoad) && (
+            {expandable && (hasChildren || hasChildrenToLoad) ? (
               <button
                 type="button"
                 className={`mr-2 w-4 h-4 flex items-center justify-center ${
@@ -485,6 +485,9 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
                   "▶"
                 )}
               </button>
+            ) : (
+              /* Placeholder for consistent alignment when no expand button */
+              <div className="w-4 h-4 mr-2"></div>
             )}
 
             {/* Checkbox */}
