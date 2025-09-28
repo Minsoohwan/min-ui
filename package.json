@@ -35,6 +35,11 @@
   ],
   "author": "minsoohwan",
   "license": "MIT",
+  "homepage": "https://minsoohwan.github.io/min-ui",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/minsoohwan/min-ui.git"
+  },
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18"
