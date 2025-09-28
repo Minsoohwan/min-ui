@@ -4,8 +4,20 @@
   "description": "Minimal React UI component library",
   "type": "module",
   "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./style": "./dist/index.css",
+    "./style.css": "./dist/index.css",
+    "./index.css": "./dist/index.css",
+    "./dist/index.css": "./dist/index.css"
+  },
   "files": [
     "dist"
   ],
