@@ -2,8 +2,7 @@
   "name": "@minsoohwan/min-ui",
   "version": "0.1.8",
   "description": "Minimal React UI component library",
-  "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
