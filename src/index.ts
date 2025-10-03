@@ -16,3 +16,5 @@ export { SelectBox } from "./components/SelectBox";
 export type { SelectBoxProps, SelectBoxItem } from "./components/SelectBox";
 export { Tree } from "./components/Tree";
 export type { TreeProps, TreeNode } from "./components/Tree";
+export { Table } from "./components/Table";
+export type { TableProps, TableColumn } from "./components/Table";

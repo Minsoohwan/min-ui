@@ -6,8 +6,8 @@
 }
 
 .min-ui-selectbox-wrapper {
-  width: fit-content;
-  min-width: 120px;
+  width: 100%;
+  min-width: 0;
 }
 
 .min-ui-selectbox-dropdown-container {
@@ -127,6 +127,15 @@
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
   max-height: 15rem;
   overflow: hidden;
+}
+
+/* Portal container for dropdown rendered to body */
+.min-ui-selectbox-portal .min-ui-selectbox-dropdown {
+  position: static;
+  left: auto;
+  right: auto;
+  margin-top: 0;
+  z-index: 1000;
 }
 
 .min-ui-selectbox-item {
