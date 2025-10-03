@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import ValidationMessages from "./ValidationMessages";
 import CheckBox from "./CheckBox";
 
@@ -24,6 +25,8 @@ export interface SelectBoxProps
   height?: React.CSSProperties["height"];
   onInitialized?: (el: HTMLDivElement | HTMLSelectElement | null) => void;
   disabled?: boolean;
+  /** 드롭다운을 document.body 포털로 렌더링 (overflow 무시). 기본값: true */
+  usePortal?: boolean;
 }
 
 export const SelectBox = React.forwardRef<
@@ -44,6 +47,7 @@ export const SelectBox = React.forwardRef<
       disabled = false,
       style,
       className = "",
+      usePortal = true,
       ...rest
     },
     ref
@@ -136,15 +140,55 @@ export const SelectBox = React.forwardRef<
     // New: dropdown state for multiple mode
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = React.useRef<HTMLDivElement | null>(null);
+    const portalRef = React.useRef<HTMLDivElement | null>(null);
+
+    const [dropdownStyle, setDropdownStyle] =
+      React.useState<React.CSSProperties>({});
+
+    const computePosition = React.useCallback(() => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: "fixed",
+        left: rect.left,
+        top: rect.bottom + 4,
+        width: rect.width,
+        zIndex: 1000,
+      });
+    }, []);
 
     React.useEffect(() => {
       function onDoc(e: MouseEvent) {
-        if (!containerRef.current) return;
-        if (!containerRef.current.contains(e.target as Node)) setIsOpen(false);
+        const target = e.target as Node;
+        const c = containerRef.current;
+        const p = portalRef.current;
+        const insideContainer = Boolean(c && c.contains(target));
+        const insidePortal = Boolean(p && p.contains(target));
+        if (!insideContainer && !insidePortal) setIsOpen(false);
       }
       document.addEventListener("mousedown", onDoc);
       return () => document.removeEventListener("mousedown", onDoc);
     }, []);
+
+    // Avoid initial flicker: compute position before first paint when opening
+    React.useLayoutEffect(() => {
+      if (isOpen && usePortal) {
+        computePosition();
+      }
+    }, [isOpen, usePortal, computePosition]);
+
+    React.useEffect(() => {
+      if (!isOpen || !usePortal) return;
+      computePosition();
+      const onScroll = () => computePosition();
+      const onResize = () => computePosition();
+      window.addEventListener("scroll", onScroll, true);
+      window.addEventListener("resize", onResize);
+      return () => {
+        window.removeEventListener("scroll", onScroll, true);
+        window.removeEventListener("resize", onResize);
+      };
+    }, [isOpen, usePortal, computePosition]);
 
     const computedStyle: React.CSSProperties = {
       ...style,
@@ -166,6 +210,92 @@ export const SelectBox = React.forwardRef<
       return labels.length > 0 ? labels.join(", ") : `${cur.length} selected`;
     }, [internalValue, multiple, processedItems]);
 
+    const dropdownList = multiple ? (
+      <div
+        role="listbox"
+        aria-multiselectable
+        className="min-ui-selectbox-dropdown"
+      >
+        {processedItems.map((it, idx) => {
+          if (it.visible === false) return null;
+          const stringVal = String(it.value);
+          const checked =
+            Array.isArray(internalValue) &&
+            internalValue.indexOf(stringVal) >= 0;
+          return (
+            <div
+              key={idx}
+              className={`min-ui-selectbox-item ${it.disabled || disabled ? "min-ui-selectbox-item-disabled" : ""}`}
+            >
+              <CheckBox
+                checked={checked}
+                disabled={disabled || it.disabled}
+                onChange={() => handleCheckboxToggle(stringVal)}
+                label={it.display}
+                width="auto"
+                className="min-ui-selectbox-checkbox"
+              />
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      <div role="listbox" className="min-ui-selectbox-dropdown">
+        {processedItems.map((it, idx) => {
+          if (it.visible === false) return null;
+          const stringVal = String(it.value);
+          const checked = String(internalValue) === stringVal;
+          return (
+            <div
+              key={idx}
+              className={`min-ui-selectbox-item ${it.disabled || disabled ? "min-ui-selectbox-item-disabled" : ""}`}
+              onClick={() => {
+                if (!it.disabled && !disabled) {
+                  setInternalValue(stringVal);
+                  onChange?.(stringVal === "" ? null : parseValue(stringVal));
+                  setIsOpen(false);
+                }
+              }}
+            >
+              {multiple ? (
+                <CheckBox
+                  checked={checked}
+                  disabled={disabled || it.disabled}
+                  onChange={() => {
+                    setInternalValue(stringVal);
+                    onChange?.(stringVal === "" ? null : parseValue(stringVal));
+                    setIsOpen(false);
+                  }}
+                  label={it.display}
+                  width="auto"
+                  className="min-ui-selectbox-checkbox"
+                />
+              ) : (
+                <span className="min-ui-selectbox-item-label">
+                  {it.display}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+
+    const dropdown = isOpen
+      ? usePortal
+        ? createPortal(
+            <div
+              ref={portalRef}
+              className="min-ui-selectbox-portal"
+              style={dropdownStyle}
+            >
+              {dropdownList}
+            </div>,
+            document.body
+          )
+        : dropdownList
+      : null;
+
     return (
       <div
         ref={setRefs}
@@ -180,7 +310,13 @@ export const SelectBox = React.forwardRef<
           >
             <button
               type="button"
-              onClick={() => setIsOpen((s) => !s)}
+              onClick={() =>
+                setIsOpen((s) => {
+                  const next = !s;
+                  if (next && usePortal) computePosition();
+                  return next;
+                })
+              }
               disabled={disabled}
               className="min-ui-selectbox-button"
               aria-haspopup="listbox"
@@ -191,37 +327,7 @@ export const SelectBox = React.forwardRef<
                 className={`min-ui-selectbox-arrow ${isOpen ? "min-ui-selectbox-arrow-open" : ""}`}
               />
             </button>
-
-            {isOpen && (
-              <div
-                role="listbox"
-                aria-multiselectable
-                className="min-ui-selectbox-dropdown"
-              >
-                {processedItems.map((it, idx) => {
-                  if (it.visible === false) return null;
-                  const stringVal = String(it.value);
-                  const checked =
-                    Array.isArray(internalValue) &&
-                    internalValue.indexOf(stringVal) >= 0;
-                  return (
-                    <div
-                      key={idx}
-                      className={`min-ui-selectbox-item ${it.disabled || disabled ? "min-ui-selectbox-item-disabled" : ""}`}
-                    >
-                      <CheckBox
-                        checked={checked}
-                        disabled={disabled || it.disabled}
-                        onChange={() => handleCheckboxToggle(stringVal)}
-                        label={it.display}
-                        width="auto"
-                        className="min-ui-selectbox-checkbox"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {isOpen && (usePortal ? dropdown : dropdownList)}
           </div>
         ) : (
           <div
@@ -231,7 +337,13 @@ export const SelectBox = React.forwardRef<
           >
             <button
               type="button"
-              onClick={() => setIsOpen((s) => !s)}
+              onClick={() =>
+                setIsOpen((s) => {
+                  const next = !s;
+                  if (next && usePortal) computePosition();
+                  return next;
+                })
+              }
               disabled={disabled}
               className="min-ui-selectbox-button"
               aria-haspopup="listbox"
@@ -246,52 +358,7 @@ export const SelectBox = React.forwardRef<
                 className={`min-ui-selectbox-arrow ${isOpen ? "min-ui-selectbox-arrow-open" : ""}`}
               />
             </button>
-
-            {isOpen && (
-              <div role="listbox" className="min-ui-selectbox-dropdown">
-                {processedItems.map((it, idx) => {
-                  if (it.visible === false) return null;
-                  const stringVal = String(it.value);
-                  const checked = String(internalValue) === stringVal;
-                  return (
-                    <div
-                      key={idx}
-                      className={`min-ui-selectbox-item ${it.disabled || disabled ? "min-ui-selectbox-item-disabled" : ""}`}
-                      onClick={() => {
-                        if (!it.disabled && !disabled) {
-                          setInternalValue(stringVal);
-                          onChange?.(
-                            stringVal === "" ? null : parseValue(stringVal)
-                          );
-                          setIsOpen(false);
-                        }
-                      }}
-                    >
-                      {multiple ? (
-                        <CheckBox
-                          checked={checked}
-                          disabled={disabled || it.disabled}
-                          onChange={() => {
-                            setInternalValue(stringVal);
-                            onChange?.(
-                              stringVal === "" ? null : parseValue(stringVal)
-                            );
-                            setIsOpen(false);
-                          }}
-                          label={it.display}
-                          width="auto"
-                          className="min-ui-selectbox-checkbox"
-                        />
-                      ) : (
-                        <span className="min-ui-selectbox-item-label">
-                          {it.display}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {isOpen && (usePortal ? dropdown : dropdownList)}
           </div>
         )}
         <ValidationMessages visible={isInvalid} messages={validationMessages} />

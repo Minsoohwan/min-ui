@@ -9,6 +9,7 @@
   transition: colors var(--min-ui-transition-fast);
   border: 1px solid var(--min-ui-border-default);
   width: 100%;
+  box-sizing: border-box;
 }
 
 .min-ui-textbox-wrapper {

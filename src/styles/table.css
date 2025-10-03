@@ -1,0 +1,96 @@
+/* Min-UI Table Component Styles */
+
+.min-ui-table-wrapper {
+  width: 100%;
+}
+
+.min-ui-table-container {
+  width: 100%;
+  background-color: var(--min-ui-color-white);
+  border: 1px solid var(--min-ui-border-default);
+  border-radius: var(--min-ui-radius-md);
+  overflow: visible;
+}
+
+.min-ui-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-size: var(--min-ui-text-sm);
+}
+
+.min-ui-table-thead th {
+  text-align: left;
+  padding: var(--min-ui-spacing-sm) var(--min-ui-spacing-md);
+  background-color: var(--min-ui-color-gray-50);
+  color: var(--min-ui-text-secondary);
+  border-bottom: 1px solid var(--min-ui-border-default);
+  font-weight: var(--min-ui-font-semibold);
+}
+
+.min-ui-table-tbody td {
+  padding: var(--min-ui-spacing-sm) var(--min-ui-spacing-md);
+  color: var(--min-ui-text-primary);
+  border-bottom: 1px solid var(--min-ui-border-default);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Allow dropdown popover to escape cell when editing with SelectBox */
+.min-ui-table-td-overflow-visible {
+  overflow: visible;
+}
+
+/* When editing, allow input controls to fully render within the cell */
+.min-ui-table-td-editing {
+  overflow: visible;
+}
+
+.min-ui-table-bordered .min-ui-table-tbody td,
+.min-ui-table-bordered .min-ui-table-thead th {
+  border-right: 1px solid var(--min-ui-border-default);
+}
+
+.min-ui-table-bordered .min-ui-table-tbody tr td:last-child,
+.min-ui-table-bordered .min-ui-table-thead tr th:last-child {
+  border-right: none;
+}
+
+.min-ui-table-striped .min-ui-table-tbody tr:nth-child(odd) td {
+  background-color: var(--min-ui-color-white);
+}
+
+.min-ui-table-striped .min-ui-table-tbody tr:nth-child(even) td {
+  background-color: var(--min-ui-bg-default);
+}
+
+.min-ui-table-hover .min-ui-table-tbody tr:hover td {
+  background-color: var(--min-ui-bg-default-hover);
+}
+
+.min-ui-table-empty-row td {
+  text-align: center;
+  color: var(--min-ui-text-secondary);
+}
+
+.min-ui-table-invalid {
+  box-shadow: 0 0 0 1px var(--min-ui-color-negative) inset;
+}
+
+/* Make container border show error color when invalid */
+.min-ui-table-container.min-ui-table-invalid {
+  border-color: var(--min-ui-color-negative);
+}
+
+/* text alignment helpers used by Table.tsx */
+.min-ui-text-left {
+  text-align: left;
+}
+.min-ui-text-center {
+  text-align: center;
+}
+.min-ui-text-right {
+  text-align: right;
+}
