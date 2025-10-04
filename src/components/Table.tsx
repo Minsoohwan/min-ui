@@ -424,13 +424,14 @@ export function Table<T = any>(props: TableProps<T>) {
                 const key = rowKey ? rowKey(row, rowIndex) : rowIndex;
                 const isSelected = isRowSelected(row, rowIndex);
                 const rowClickable = selectMode !== "none";
+                const isRowDisabled = (row as any).disabled === true;
 
                 return (
                   <tr
                     key={key}
-                    className={`min-ui-table-tr ${isSelected ? "min-ui-table-tr-selected" : ""} ${rowClickable && selectMode !== "multiple" ? "min-ui-table-tr-clickable" : ""}`.trim()}
+                    className={`min-ui-table-tr ${isSelected ? "min-ui-table-tr-selected" : ""} ${rowClickable && selectMode !== "multiple" && !isRowDisabled ? "min-ui-table-tr-clickable" : ""} ${isRowDisabled ? "min-ui-table-tr-disabled" : ""}`.trim()}
                     onClick={
-                      selectMode !== "multiple"
+                      selectMode !== "multiple" && !isRowDisabled
                         ? () => handleRowClick(row, rowIndex)
                         : undefined
                     }
@@ -444,9 +445,12 @@ export function Table<T = any>(props: TableProps<T>) {
                       >
                         <CheckBox
                           value={isSelected}
+                          disabled={isRowDisabled}
                           onChange={(e) => {
                             e.stopPropagation(); // Prevent row click
-                            handleRowClick(row, rowIndex);
+                            if (!isRowDisabled) {
+                              handleRowClick(row, rowIndex);
+                            }
                           }}
                           onClick={(e) => {
                             e.stopPropagation(); // Prevent bubbling to row
@@ -607,6 +611,7 @@ export function Table<T = any>(props: TableProps<T>) {
                       let cellContent: React.ReactNode = displayContent;
                       const active =
                         editing &&
+                        !isRowDisabled &&
                         edit &&
                         resolvedEditor !== "none" &&
                         isCellActive(rowIndex, colIndex);
@@ -678,10 +683,20 @@ export function Table<T = any>(props: TableProps<T>) {
                         <td
                           key={colIndex}
                           className={tdClasses.join(" ")}
-                          tabIndex={editing && edit ? 0 : undefined}
-                          onFocus={handleCellFocus(rowIndex, colIndex)}
-                          onClick={handleCellFocus(rowIndex, colIndex)}
-                          onBlur={handleCellBlur}
+                          tabIndex={
+                            editing && edit && !isRowDisabled ? 0 : undefined
+                          }
+                          onFocus={
+                            !isRowDisabled
+                              ? handleCellFocus(rowIndex, colIndex)
+                              : undefined
+                          }
+                          onClick={
+                            !isRowDisabled
+                              ? handleCellFocus(rowIndex, colIndex)
+                              : undefined
+                          }
+                          onBlur={!isRowDisabled ? handleCellBlur : undefined}
                         >
                           {cellContent}
                         </td>

@@ -38,6 +38,34 @@ const sampleData: Row[] = [
   },
 ];
 
+const sampleDataWithDisabled: (Row & { disabled?: boolean })[] = [
+  {
+    id: 1,
+    name: "Alice",
+    age: 28,
+    email: "alice@example.com",
+    active: true,
+    permissions: { read: true, write: false, execute: null },
+  },
+  {
+    id: 2,
+    name: "Bob",
+    age: 34,
+    email: "bob@example.com",
+    active: false,
+    permissions: { read: true, write: true, execute: false },
+    disabled: true, // 이 행은 비활성화됨
+  },
+  {
+    id: 3,
+    name: "Charlie",
+    age: 22,
+    email: "charlie@example.com",
+    active: true,
+    permissions: { read: true, write: null, execute: false },
+  },
+];
+
 const meta: Meta<typeof Table<Row>> = {
   title: "Components/Table",
   component: Table<Row>,
@@ -642,5 +670,125 @@ export const WithDataField: Story = {
         render: (v: any) => (v ? "✓ 활성" : "✗ 비활성"),
       },
     ],
+  },
+};
+
+export const WithDisabledRows: Story = {
+  args: {
+    data: sampleDataWithDisabled,
+    columns: [
+      { key: "id", header: "ID", width: 60, align: "right" },
+      { key: "name", header: "Name", width: 160 },
+      { key: "age", header: "Age", width: 80, align: "center" },
+      { key: "email", header: "Email", width: 220 },
+      {
+        key: "active",
+        header: "Active",
+        width: 100,
+        align: "center",
+        render: (v: any) => (v ? "✓" : "✗"),
+      },
+    ],
+  },
+};
+
+export const WithDisabledRowsAndSelection: Story = {
+  render: (args) => {
+    const [selectedRowKeys, setSelectedRowKeys] = React.useState<number[]>([1]);
+
+    return (
+      <div>
+        <p style={{ marginBottom: "10px" }}>
+          <strong>선택된 행 IDs:</strong> {selectedRowKeys.join(", ")}
+          <br />
+          <small>(2번 행은 비활성화되어 선택할 수 없습니다)</small>
+        </p>
+        <Table
+          {...args}
+          data={sampleDataWithDisabled}
+          rowKey={(row: any) => row.id}
+          selectMode="multiple"
+          selectedRowKeys={selectedRowKeys}
+          onRowSelectionChange={({ selectedRowKeys, selectedRows }) => {
+            setSelectedRowKeys(selectedRowKeys as number[]);
+            console.log("선택된 행:", selectedRows);
+          }}
+          columns={[
+            { key: "id", header: "ID", width: 60, align: "right" },
+            { key: "name", header: "Name", width: 160 },
+            { key: "age", header: "Age", width: 80, align: "center" },
+            { key: "email", header: "Email", width: 220 },
+            {
+              key: "active",
+              header: "Active",
+              width: 100,
+              align: "center",
+              render: (v: any) => (v ? "✓" : "✗"),
+            },
+          ]}
+        />
+      </div>
+    );
+  },
+};
+
+export const WithDisabledRowsAndEditing: Story = {
+  render: (args) => {
+    const [rows, setRows] = React.useState(sampleDataWithDisabled);
+
+    return (
+      <div>
+        <p style={{ marginBottom: "10px" }}>
+          <small>(2번 행은 비활성화되어 편집할 수 없습니다)</small>
+        </p>
+        <Table
+          {...args}
+          data={rows}
+          editing
+          onCellChange={({ rowIndex, key, value }) => {
+            setRows((prev) => {
+              const next = [...prev];
+              (next[rowIndex] as any)[key as any] = value;
+              return next;
+            });
+          }}
+          columns={[
+            { key: "id", header: "ID", width: 60, align: "right" },
+            {
+              key: "name",
+              header: "Name",
+              width: 160,
+              edit: { editor: "TextBox", editorProps: { placeholder: "이름" } },
+            },
+            {
+              key: "age",
+              header: "Age",
+              width: 100,
+              align: "center",
+              edit: {
+                editor: "SelectBox",
+                editorProps: { items: [20, 25, 30, 35, 40] },
+              },
+            },
+            {
+              key: "email",
+              header: "Email",
+              width: 220,
+              edit: {
+                editor: "TextBox",
+                editorProps: { placeholder: "이메일" },
+              },
+            },
+            {
+              key: "active",
+              header: "Active",
+              width: 100,
+              align: "center",
+              edit: { editor: "CheckBox" },
+            },
+          ]}
+        />
+      </div>
+    );
   },
 };

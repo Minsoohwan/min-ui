@@ -154,6 +154,22 @@
   background-color: rgba(59, 130, 246, 0.15) !important;
 }
 
+/* Disabled row styles */
+.min-ui-table-tr-disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.min-ui-table-tr-disabled td {
+  color: var(--min-ui-text-disabled, #9ca3af) !important;
+  background-color: var(--min-ui-bg-disabled, #f9fafb) !important;
+  pointer-events: none;
+}
+
+.min-ui-table-tr-disabled:hover td {
+  background-color: var(--min-ui-bg-disabled, #f9fafb) !important;
+}
+
 /* Override styles for checkbox in selection cells */
 .min-ui-table-select-header .min-ui-checkbox-wrapper,
 .min-ui-table-select-cell .min-ui-checkbox-wrapper {
