@@ -26,9 +26,14 @@ export interface TableColumn<T = any> {
   header: React.ReactNode;
   width?: React.CSSProperties["width"];
   align?: "left" | "center" | "right";
+  headerAlign?: "left" | "center" | "right";
+  dataField?: keyof T | string;
   render?: (value: any, row: T, rowIndex: number) => React.ReactNode;
   edit?: EditInfo<T>;
+  children?: TableColumn<T>[];
 }
+
+export type SelectMode = "single" | "multiple" | "none";
 
 export interface TableProps<T = any> {
   columns: TableColumn<T>[];
@@ -56,6 +61,16 @@ export interface TableProps<T = any> {
     value: any;
     row: T;
   }) => void;
+  /** 행 선택 모드 */
+  selectMode?: SelectMode;
+  /** 선택된 행들의 키 값들 (multiple일 때 배열, single일 때 단일 값) */
+  selectedRowKeys?: React.Key | React.Key[];
+  /** 행 선택 변경 알림 */
+  onRowSelectionChange?: (args: {
+    selectedRowKeys: React.Key[];
+    selectedRows: T[];
+    selectMode: SelectMode;
+  }) => void;
 }
 
 export function Table<T = any>(props: TableProps<T>) {
@@ -76,6 +91,9 @@ export function Table<T = any>(props: TableProps<T>) {
     onInitialized,
     editing = false,
     onCellChange,
+    selectMode = "none",
+    selectedRowKeys = [],
+    onRowSelectionChange,
   } = props;
 
   const isInvalid = React.useMemo(
@@ -97,11 +115,192 @@ export function Table<T = any>(props: TableProps<T>) {
     ...(height != null ? { height } : {}),
   };
 
+  // Flatten columns to get leaf columns only
+  const flattenColumns = (cols: TableColumn<T>[]): TableColumn<T>[] => {
+    const result: TableColumn<T>[] = [];
+    cols.forEach((col) => {
+      if (col.children && col.children.length > 0) {
+        result.push(...flattenColumns(col.children));
+      } else {
+        result.push(col);
+      }
+    });
+    return result;
+  };
+
+  // Get max depth of column hierarchy
+  const getMaxDepth = (cols: TableColumn<T>[]): number => {
+    let maxDepth = 1;
+    cols.forEach((col) => {
+      if (col.children && col.children.length > 0) {
+        maxDepth = Math.max(maxDepth, 1 + getMaxDepth(col.children));
+      }
+    });
+    return maxDepth;
+  };
+
+  // Build header rows for nested columns
+  const buildHeaderRows = (
+    cols: TableColumn<T>[],
+    depth: number,
+    maxDepth: number
+  ): React.ReactNode[][] => {
+    const rows: React.ReactNode[][] = Array.from(
+      { length: maxDepth },
+      () => []
+    );
+
+    const processColumn = (
+      col: TableColumn<T>,
+      colIndex: number,
+      currentDepth: number
+    ) => {
+      const headerAlignment = col.headerAlign ?? col.align ?? "left";
+      const hasChildren = col.children && col.children.length > 0;
+      const colSpan = hasChildren ? flattenColumns([col]).length : 1;
+      const rowSpan = hasChildren ? 1 : maxDepth - currentDepth + 1;
+
+      rows[currentDepth - 1]?.push(
+        <th
+          key={`${currentDepth}-${colIndex}`}
+          className={`min-ui-table-th min-ui-text-${headerAlignment}`}
+          colSpan={colSpan}
+          rowSpan={rowSpan}
+        >
+          {col.header}
+        </th>
+      );
+
+      if (hasChildren && col.children) {
+        col.children.forEach((child, childIdx) => {
+          processColumn(child, childIdx, currentDepth + 1);
+        });
+      }
+    };
+
+    cols.forEach((col, idx) => processColumn(col, idx, depth));
+    return rows;
+  };
+
+  const leafColumns = React.useMemo(() => flattenColumns(columns), [columns]);
+  const maxDepth = React.useMemo(() => getMaxDepth(columns), [columns]);
+  const headerRows = React.useMemo(
+    () => buildHeaderRows(columns, 1, maxDepth),
+    [columns, maxDepth]
+  );
+
   // Manage active cell: show editor only when cell is focused
   const [activeCell, setActiveCell] = React.useState<{
     rowIndex: number;
     colIndex: number;
   } | null>(null);
+
+  // Selection state management
+  const normalizedSelectedKeys = React.useMemo(() => {
+    if (!selectedRowKeys) return [];
+    return Array.isArray(selectedRowKeys) ? selectedRowKeys : [selectedRowKeys];
+  }, [selectedRowKeys]);
+
+  const getRowKey = React.useCallback(
+    (row: T, index: number): React.Key => {
+      return rowKey ? rowKey(row, index) : index;
+    },
+    [rowKey]
+  );
+
+  const isRowSelected = React.useCallback(
+    (row: T, index: number) => {
+      const key = getRowKey(row, index);
+      return normalizedSelectedKeys.includes(key);
+    },
+    [normalizedSelectedKeys, getRowKey]
+  );
+
+  const handleRowClick = React.useCallback(
+    (row: T, index: number) => {
+      if (selectMode === "none" || !onRowSelectionChange) return;
+
+      const key = getRowKey(row, index);
+      const newSelectedKeys = [...normalizedSelectedKeys];
+      const keyIndex = newSelectedKeys.indexOf(key);
+
+      if (selectMode === "single") {
+        // Single selection: replace current selection
+        onRowSelectionChange({
+          selectedRowKeys: [key],
+          selectedRows: [row],
+          selectMode,
+        });
+      } else if (selectMode === "multiple") {
+        // Multiple selection: toggle selection
+        if (keyIndex === -1) {
+          newSelectedKeys.push(key);
+        } else {
+          newSelectedKeys.splice(keyIndex, 1);
+        }
+
+        const selectedRows = newSelectedKeys
+          .map((key) => data.find((r, i) => getRowKey(r, i) === key))
+          .filter(Boolean) as T[];
+
+        onRowSelectionChange({
+          selectedRowKeys: newSelectedKeys,
+          selectedRows,
+          selectMode,
+        });
+      }
+    },
+    [selectMode, onRowSelectionChange, normalizedSelectedKeys, getRowKey, data]
+  );
+
+  const handleSelectAll = React.useCallback(() => {
+    if (selectMode !== "multiple" || !onRowSelectionChange) return;
+
+    const allKeys = data.map((row, index) => getRowKey(row, index));
+    const isAllSelected = allKeys.every((key) =>
+      normalizedSelectedKeys.includes(key)
+    );
+
+    if (isAllSelected) {
+      // Deselect all
+      onRowSelectionChange({
+        selectedRowKeys: [],
+        selectedRows: [],
+        selectMode,
+      });
+    } else {
+      // Select all
+      onRowSelectionChange({
+        selectedRowKeys: allKeys,
+        selectedRows: data,
+        selectMode,
+      });
+    }
+  }, [
+    selectMode,
+    onRowSelectionChange,
+    normalizedSelectedKeys,
+    data,
+    getRowKey,
+  ]);
+
+  const getHeaderCheckboxState = React.useMemo(() => {
+    if (selectMode !== "multiple" || data.length === 0) {
+      return { checked: false, indeterminate: false };
+    }
+
+    const allKeys = data.map((row, index) => getRowKey(row, index));
+    const selectedCount = normalizedSelectedKeys.length;
+    const totalCount = allKeys.length;
+
+    if (selectedCount === 0) {
+      return { checked: false, indeterminate: false };
+    } else if (selectedCount === totalCount) {
+      return { checked: true, indeterminate: false };
+    } else {
+      return { checked: false, indeterminate: true };
+    }
+  }, [selectMode, normalizedSelectedKeys, data, getRowKey]);
 
   const isCellActive = React.useCallback(
     (rowIndex: number, colIndex: number) =>
@@ -118,9 +317,46 @@ export function Table<T = any>(props: TableProps<T>) {
     setActiveCell({ rowIndex, colIndex });
   };
 
+  const blurTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  React.useEffect(() => {
+    // Cleanup timeout on unmount
+    return () => {
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleCellBlur = (e: React.FocusEvent<HTMLTableCellElement>) => {
     const next = e.relatedTarget as Node | null;
-    if (!e.currentTarget.contains(next)) setActiveCell(null);
+
+    // Clear any pending blur
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+    }
+
+    // Don't blur if focus is moving to something inside the cell
+    if (e.currentTarget.contains(next)) {
+      return;
+    }
+
+    // Delay blur to allow portal clicks (SelectBox dropdown)
+    blurTimeoutRef.current = setTimeout(() => {
+      // Check if focus is still outside the cell
+      const currentlyFocused = document.activeElement;
+
+      // Check if currently focused element is a SelectBox dropdown
+      const isSelectBoxDropdown = currentlyFocused?.closest(
+        ".min-ui-selectbox-dropdown"
+      );
+
+      if (!isSelectBoxDropdown) {
+        setActiveCell(null);
+      }
+    }, 150);
   };
 
   return (
@@ -141,36 +377,86 @@ export function Table<T = any>(props: TableProps<T>) {
           }`.trim()}
         >
           <colgroup>
-            {columns.map((col, idx) => (
+            {selectMode === "multiple" && (
+              <col key="select" style={{ width: "40px" }} />
+            )}
+            {leafColumns.map((col, idx) => (
               <col key={idx} style={{ width: col.width }} />
             ))}
           </colgroup>
           <thead className="min-ui-table-thead">
-            <tr>
-              {columns.map((col, idx) => (
-                <th
-                  key={idx}
-                  className={`min-ui-table-th min-ui-text-${col.align ?? "left"}`}
-                >
-                  {col.header}
-                </th>
-              ))}
-            </tr>
+            {headerRows.map((row, rowIdx) => (
+              <tr key={rowIdx}>
+                {rowIdx === 0 && selectMode === "multiple" && (
+                  <th
+                    className="min-ui-table-th min-ui-table-select-header"
+                    rowSpan={maxDepth}
+                  >
+                    <CheckBox
+                      value={
+                        getHeaderCheckboxState.indeterminate
+                          ? null
+                          : getHeaderCheckboxState.checked
+                      }
+                      enableThreeState={true}
+                      onChange={handleSelectAll}
+                    />
+                  </th>
+                )}
+                {row}
+              </tr>
+            ))}
           </thead>
           <tbody className="min-ui-table-tbody">
             {data.length === 0 ? (
               <tr className="min-ui-table-empty-row">
-                <td className="min-ui-table-empty" colSpan={columns.length}>
+                <td
+                  className="min-ui-table-empty"
+                  colSpan={
+                    leafColumns.length + (selectMode === "multiple" ? 1 : 0)
+                  }
+                >
                   {emptyText}
                 </td>
               </tr>
             ) : (
               data.map((row, rowIndex) => {
                 const key = rowKey ? rowKey(row, rowIndex) : rowIndex;
+                const isSelected = isRowSelected(row, rowIndex);
+                const rowClickable = selectMode !== "none";
+
                 return (
-                  <tr key={key} className="min-ui-table-tr">
-                    {columns.map((col, colIndex) => {
-                      const value = (row as any)[col.key as any];
+                  <tr
+                    key={key}
+                    className={`min-ui-table-tr ${isSelected ? "min-ui-table-tr-selected" : ""} ${rowClickable && selectMode !== "multiple" ? "min-ui-table-tr-clickable" : ""}`.trim()}
+                    onClick={
+                      selectMode !== "multiple"
+                        ? () => handleRowClick(row, rowIndex)
+                        : undefined
+                    }
+                  >
+                    {selectMode === "multiple" && (
+                      <td
+                        className="min-ui-table-td min-ui-table-select-cell"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row click
+                        }}
+                      >
+                        <CheckBox
+                          value={isSelected}
+                          onChange={(e) => {
+                            e.stopPropagation(); // Prevent row click
+                            handleRowClick(row, rowIndex);
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent bubbling to row
+                          }}
+                        />
+                      </td>
+                    )}
+                    {leafColumns.map((col, colIndex) => {
+                      const fieldKey = col.dataField ?? col.key;
+                      const value = (row as any)[fieldKey as any];
                       const edit = col.edit;
 
                       const defaultDisplay = col.render
@@ -307,11 +593,12 @@ export function Table<T = any>(props: TableProps<T>) {
                       })();
 
                       const handleEmit = (newValue: any) => {
+                        const fieldKey = col.dataField ?? col.key;
                         onCellChange?.({
                           rowIndex,
                           colIndex,
                           column: col,
-                          key: col.key,
+                          key: fieldKey,
                           value: newValue,
                           row,
                         });

@@ -14,28 +14,56 @@
 
 .min-ui-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: collapse;
   table-layout: fixed;
   font-size: var(--min-ui-text-sm);
 }
 
 .min-ui-table-thead th {
-  text-align: left;
   padding: var(--min-ui-spacing-sm) var(--min-ui-spacing-md);
   background-color: var(--min-ui-color-gray-50);
   color: var(--min-ui-text-secondary);
-  border-bottom: 1px solid var(--min-ui-border-default);
   font-weight: var(--min-ui-font-semibold);
+  vertical-align: middle;
+  border: 1px solid var(--min-ui-border-default);
+}
+
+/* Non-bordered table: only show bottom borders */
+.min-ui-table:not(.min-ui-table-bordered) .min-ui-table-thead th {
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+/* Make last header row border slightly thicker for better separation */
+.min-ui-table-thead tr:last-child th {
+  border-bottom: 2px solid var(--min-ui-border-default);
+}
+
+/* Visual distinction for nested header levels */
+.min-ui-table-thead tr:first-child th {
+  background-color: var(--min-ui-color-gray-100, #f3f4f6);
+}
+
+.min-ui-table-thead tr:not(:first-child) th {
+  background-color: var(--min-ui-color-gray-50, #f9fafb);
 }
 
 .min-ui-table-tbody td {
   padding: var(--min-ui-spacing-sm) var(--min-ui-spacing-md);
   color: var(--min-ui-text-primary);
-  border-bottom: 1px solid var(--min-ui-border-default);
+  border: 1px solid var(--min-ui-border-default);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* Non-bordered table: only show bottom borders */
+.min-ui-table:not(.min-ui-table-bordered) .min-ui-table-tbody td {
+  border-left: none;
+  border-right: none;
+  border-top: none;
 }
 
 /* Allow dropdown popover to escape cell when editing with SelectBox */
@@ -48,15 +76,7 @@
   overflow: visible;
 }
 
-.min-ui-table-bordered .min-ui-table-tbody td,
-.min-ui-table-bordered .min-ui-table-thead th {
-  border-right: 1px solid var(--min-ui-border-default);
-}
-
-.min-ui-table-bordered .min-ui-table-tbody tr td:last-child,
-.min-ui-table-bordered .min-ui-table-thead tr th:last-child {
-  border-right: none;
-}
+/* Bordered table styles already applied via base td styles above */
 
 .min-ui-table-striped .min-ui-table-tbody tr:nth-child(odd) td {
   background-color: var(--min-ui-color-white);
@@ -66,8 +86,22 @@
   background-color: var(--min-ui-bg-default);
 }
 
+/* Selected rows override striped pattern */
+.min-ui-table-striped .min-ui-table-tr-selected td {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.min-ui-table-striped .min-ui-table-tr-selected:hover td {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+
 .min-ui-table-hover .min-ui-table-tbody tr:hover td {
   background-color: var(--min-ui-bg-default-hover);
+}
+
+/* Prioritize selected row styles over hover */
+.min-ui-table-hover .min-ui-table-tbody .min-ui-table-tr-selected:hover td {
+  background-color: rgba(59, 130, 246, 0.15) !important;
 }
 
 .min-ui-table-empty-row td {
@@ -84,13 +118,88 @@
   border-color: var(--min-ui-color-negative);
 }
 
+/* Selection column styles */
+.min-ui-table-select-header {
+  width: 40px !important;
+  padding: var(--min-ui-spacing-sm) 0 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.min-ui-table-select-cell {
+  width: 40px !important;
+  padding: var(--min-ui-spacing-sm) 0 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.min-ui-table-tr-selected td {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.min-ui-table-tr-clickable {
+  cursor: pointer;
+}
+
+.min-ui-table-tr-clickable:hover td {
+  background-color: rgba(0, 125, 128, 0.05) !important;
+}
+
+/* Only apply clickable hover for non-selected rows */
+.min-ui-table-tr-clickable:not(.min-ui-table-tr-selected):hover td {
+  background-color: rgba(0, 125, 128, 0.05) !important;
+}
+
+.min-ui-table-tr-selected:hover td {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Override styles for checkbox in selection cells */
+.min-ui-table-select-header .min-ui-checkbox-wrapper,
+.min-ui-table-select-cell .min-ui-checkbox-wrapper {
+  width: auto !important;
+  display: inline-block !important;
+  margin: 0 auto !important;
+}
+
+.min-ui-table-select-header .min-ui-checkbox-label,
+.min-ui-table-select-cell .min-ui-checkbox-label {
+  display: inline-flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.min-ui-table-select-header .min-ui-checkbox,
+.min-ui-table-select-cell .min-ui-checkbox {
+  margin: 0 !important;
+}
+
+.min-ui-table-tr-clickable {
+  cursor: pointer;
+}
+
+.min-ui-table-tr-clickable:hover td {
+  background-color: var(--min-ui-bg-default-hover) !important;
+}
+
+/* Ensure selection cell doesn't trigger row hover for multiple mode */
+.min-ui-table-tr .min-ui-table-select-cell:hover {
+  background-color: inherit !important;
+}
+
+/* Selection cell specific styling */
+.min-ui-table-select-cell {
+  user-select: none;
+  position: relative;
+}
+
 /* text alignment helpers used by Table.tsx */
 .min-ui-text-left {
-  text-align: left;
+  text-align: left !important;
 }
 .min-ui-text-center {
-  text-align: center;
+  text-align: center !important;
 }
 .min-ui-text-right {
-  text-align: right;
+  text-align: right !important;
 }

@@ -44,7 +44,13 @@ const meta: Meta<typeof Table<Row>> = {
   tags: ["autodocs"],
   args: {
     columns: [
-      { key: "id", header: "ID", width: 60, align: "right" },
+      {
+        key: "id",
+        header: "ID",
+        width: 60,
+        align: "right",
+        headerAlign: "center",
+      },
       { key: "name", header: "Name", width: 160 },
       { key: "age", header: "Age", width: 80, align: "center" },
       { key: "email", header: "Email", width: 220 },
@@ -142,19 +148,33 @@ export const Editing: Story = {
     ];
 
     return (
-      <Table<Row>
-        {...args}
-        columns={columns as any}
-        data={rows}
-        editing
-        onCellChange={({ rowIndex, key, value }) => {
-          setRows((prev) => {
-            const next = [...prev];
-            (next[rowIndex] as any)[key as any] = value;
-            return next;
-          });
-        }}
-      />
+      <div>
+        <div
+          style={{
+            marginBottom: "10px",
+            padding: "10px",
+            background: "#f0f0f0",
+          }}
+        >
+          <strong>현재 데이터:</strong>
+          <pre>{JSON.stringify(rows, null, 2)}</pre>
+        </div>
+        <Table<Row>
+          {...args}
+          columns={columns as any}
+          data={rows}
+          editing
+          onCellChange={({ rowIndex, key, value }) => {
+            console.log("onCellChange:", { rowIndex, key, value });
+            setRows((prev) => {
+              const next = [...prev];
+              (next[rowIndex] as any)[key as any] = value;
+              console.log("Updated rows:", next);
+              return next;
+            });
+          }}
+        />
+      </div>
     );
   },
 };
@@ -341,5 +361,286 @@ export const RowSpecificEditors: Story = {
         }}
       />
     );
+  },
+};
+
+export const SingleSelection: Story = {
+  render: (args) => {
+    const [selectedRowKeys, setSelectedRowKeys] = React.useState<number>(1);
+
+    return (
+      <div>
+        <p>선택된 행: {selectedRowKeys}</p>
+        <Table<Row>
+          {...args}
+          rowKey={(row) => row.id}
+          selectMode="single"
+          selectedRowKeys={selectedRowKeys}
+          onRowSelectionChange={({ selectedRowKeys, selectedRows }) => {
+            const id = selectedRowKeys[0];
+            setSelectedRowKeys(id as number);
+            console.log("선택된 행:", selectedRows);
+          }}
+        />
+      </div>
+    );
+  },
+};
+
+export const MultipleSelection: Story = {
+  render: (args) => {
+    const [selectedRowKeys, setSelectedRowKeys] = React.useState<number[]>([
+      1, 3,
+    ]);
+
+    return (
+      <div>
+        <p>선택된 행 IDs: {selectedRowKeys.join(", ")}</p>
+        <Table<Row>
+          {...args}
+          rowKey={(row) => row.id}
+          selectMode="multiple"
+          selectedRowKeys={selectedRowKeys}
+          onRowSelectionChange={({ selectedRowKeys, selectedRows }) => {
+            setSelectedRowKeys(selectedRowKeys as number[]);
+            console.log("선택된 행:", selectedRows);
+          }}
+        />
+      </div>
+    );
+  },
+};
+
+export const SelectionWithEditing: Story = {
+  render: (args) => {
+    const [rows, setRows] = React.useState<Row[]>(args.data as Row[]);
+    const [selectedRowKeys, setSelectedRowKeys] = React.useState<number[]>([1]);
+
+    const columns = [
+      { key: "id", header: "ID", width: 60, align: "right" as const },
+      {
+        key: "name",
+        header: "Name",
+        width: 160,
+        edit: { editor: "TextBox", editorProps: { placeholder: "이름" } },
+      },
+      { key: "age", header: "Age", width: 100, align: "center" as const },
+      { key: "email", header: "Email", width: 220 },
+      {
+        key: "active",
+        header: "Active",
+        width: 100,
+        align: "center" as const,
+        edit: { editor: "CheckBox" },
+      },
+    ];
+
+    return (
+      <div>
+        <p>선택된 행 IDs: {selectedRowKeys.join(", ")}</p>
+        <Table<Row>
+          {...args}
+          columns={columns as any}
+          rowKey={(row) => row.id}
+          data={rows}
+          selectMode="multiple"
+          selectedRowKeys={selectedRowKeys}
+          editing
+          onRowSelectionChange={({ selectedRowKeys, selectedRows }) => {
+            setSelectedRowKeys(selectedRowKeys as number[]);
+            console.log("선택된 행:", selectedRows);
+          }}
+          onCellChange={({ rowIndex, key, value }) => {
+            setRows((prev) => {
+              const next = [...prev];
+              (next[rowIndex] as any)[key as any] = value;
+              return next;
+            });
+          }}
+        />
+      </div>
+    );
+  },
+};
+
+export const CustomAlignment: Story = {
+  args: {
+    columns: [
+      {
+        key: "id",
+        header: "ID",
+        width: 80,
+        align: "right",
+        headerAlign: "center",
+      },
+      {
+        key: "name",
+        header: "이름",
+        width: 150,
+        align: "left",
+        headerAlign: "center",
+      },
+      {
+        key: "age",
+        header: "나이",
+        width: 100,
+        align: "center",
+        headerAlign: "center",
+      },
+      {
+        key: "email",
+        header: "이메일",
+        width: 250,
+        align: "left",
+      },
+    ],
+  },
+};
+
+export const NestedColumns: Story = {
+  args: {
+    columns: [
+      {
+        key: "id",
+        header: "ID",
+        width: 60,
+        align: "right",
+        headerAlign: "center",
+      },
+      {
+        key: "user-info",
+        header: "사용자 정보",
+        headerAlign: "center",
+        children: [
+          {
+            key: "name",
+            header: "이름",
+            width: 120,
+            align: "left",
+          },
+          {
+            key: "age",
+            header: "나이",
+            width: 80,
+            align: "center",
+          },
+        ],
+      },
+      {
+        key: "contact",
+        header: "연락처",
+        headerAlign: "center",
+        children: [
+          {
+            key: "email",
+            header: "이메일",
+            width: 200,
+            align: "left",
+          },
+        ],
+      },
+      {
+        key: "active",
+        header: "활성",
+        width: 80,
+        align: "center",
+        headerAlign: "center",
+        render: (v: any) => (v ? "✓" : "✗"),
+      },
+    ],
+  },
+};
+
+export const ComplexNestedColumns: Story = {
+  args: {
+    columns: [
+      {
+        key: "id",
+        header: "ID",
+        width: 60,
+        align: "right",
+        headerAlign: "center",
+      },
+      {
+        key: "personal",
+        header: "개인 정보",
+        headerAlign: "center",
+        children: [
+          {
+            key: "basic",
+            header: "기본 정보",
+            headerAlign: "center",
+            children: [
+              {
+                key: "name",
+                header: "이름",
+                width: 100,
+              },
+              {
+                key: "age",
+                header: "나이",
+                width: 60,
+                align: "center",
+              },
+            ],
+          },
+          {
+            key: "email",
+            header: "이메일",
+            width: 180,
+          },
+        ],
+      },
+      {
+        key: "active",
+        header: "상태",
+        width: 80,
+        align: "center",
+        headerAlign: "center",
+        render: (v: any) => (v ? "활성" : "비활성"),
+      },
+    ],
+  },
+};
+
+export const WithDataField: Story = {
+  args: {
+    columns: [
+      {
+        key: "user-id",
+        header: "ID",
+        dataField: "id",
+        width: 60,
+        align: "right",
+        headerAlign: "center",
+      },
+      {
+        key: "user-name",
+        header: "사용자 이름",
+        dataField: "name",
+        width: 150,
+      },
+      {
+        key: "user-age",
+        header: "나이",
+        dataField: "age",
+        width: 80,
+        align: "center",
+      },
+      {
+        key: "user-email",
+        header: "이메일 주소",
+        dataField: "email",
+        width: 220,
+      },
+      {
+        key: "user-status",
+        header: "상태",
+        dataField: "active",
+        width: 100,
+        align: "center",
+        render: (v: any) => (v ? "✓ 활성" : "✗ 비활성"),
+      },
+    ],
   },
 };
