@@ -792,3 +792,219 @@ export const WithDisabledRowsAndEditing: Story = {
     );
   },
 };
+
+type MergeData = {
+  id: number;
+  category: string;
+  product: string;
+  price: number;
+  stock: number;
+};
+
+const mergeData: MergeData[] = [
+  { id: 1, category: "Electronics", product: "Laptop", price: 1200, stock: 50 },
+  { id: 2, category: "Electronics", product: "Mouse", price: 25, stock: 200 },
+  {
+    id: 3,
+    category: "Electronics",
+    product: "Keyboard",
+    price: 75,
+    stock: 150,
+  },
+  { id: 4, category: "Books", product: "Novel", price: 15, stock: 100 },
+  { id: 5, category: "Books", product: "Magazine", price: 5, stock: 300 },
+  { id: 6, category: "Clothing", product: "T-Shirt", price: 20, stock: 500 },
+];
+
+export const WithCellMerge = {
+  args: {
+    data: mergeData as any,
+    columns: [
+      {
+        key: "id",
+        header: "ID",
+        width: 60,
+        align: "right",
+        headerAlign: "center",
+      },
+      {
+        key: "category",
+        header: "Category",
+        width: 150,
+        align: "center",
+        // 같은 카테고리를 병합
+        getCellMerge: (value: any, row: MergeData, rowIndex: number) => {
+          if (rowIndex === 0) {
+            // Electronics: 3행
+            return { rowSpan: 3 };
+          } else if (rowIndex === 3) {
+            // Books: 2행
+            return { rowSpan: 2 };
+          } else if (rowIndex === 5) {
+            // Clothing: 1행
+            return { rowSpan: 1 };
+          }
+          return null;
+        },
+      },
+      { key: "product", header: "Product", width: 150 },
+      {
+        key: "price",
+        header: "Price",
+        width: 100,
+        align: "right",
+        render: (v: any) => `$${v}`,
+      },
+      {
+        key: "stock",
+        header: "Stock",
+        width: 100,
+        align: "center",
+      },
+    ],
+  },
+};
+
+export const WithComplexMerge = {
+  args: {
+    data: [
+      { id: 1, col1: "A", col2: "B", col3: "C", col4: "D" },
+      { id: 2, col1: "A", col2: "E", col3: "F", col4: "G" },
+      { id: 3, col1: "H", col2: "I", col3: "J", col4: "K" },
+      { id: 4, col1: "L", col2: "M", col3: "N", col4: "O" },
+    ],
+    columns: [
+      { key: "id", header: "ID", width: 60, align: "center" },
+      {
+        key: "col1",
+        header: "Column 1",
+        width: 150,
+        align: "center",
+        // 첫 두 행 병합
+        getCellMerge: (value: any, row: any, rowIndex: number) => {
+          if (rowIndex === 0) {
+            return { rowSpan: 2 };
+          }
+          return null;
+        },
+      },
+      {
+        key: "col2",
+        header: "Column 2",
+        width: 150,
+        align: "center",
+      },
+      {
+        key: "col3",
+        header: "Column 3-4",
+        width: 150,
+        align: "center",
+        // 2열 병합
+        getCellMerge: (value: any, row: any, rowIndex: number) => {
+          return { colSpan: 2 };
+        },
+      },
+      {
+        key: "col4",
+        header: "Hidden",
+        width: 150,
+        align: "center",
+      },
+    ],
+  },
+};
+
+export const WithMergeAndEditing = {
+  render: (args: any) => {
+    const [rows, setRows] = React.useState(mergeData);
+
+    return (
+      <div>
+        <p style={{ marginBottom: "10px" }}>
+          <strong>병합된 셀에서도 편집 가능합니다</strong>
+          <br />
+          <small>
+            Category 컬럼은 병합되어 있지만, 병합된 첫 번째 셀에서 편집할 수
+            있습니다.
+          </small>
+        </p>
+        <div style={{ marginBottom: "10px", fontSize: "12px" }}>
+          <pre>{JSON.stringify(rows, null, 2)}</pre>
+        </div>
+        <Table
+          {...args}
+          data={rows}
+          editing
+          onCellChange={({ rowIndex, key, value }: any) => {
+            console.log("Cell changed:", { rowIndex, key, value });
+            setRows((prev: any) => {
+              const next = [...prev];
+              (next[rowIndex] as any)[key as any] = value;
+              return next;
+            });
+          }}
+          columns={[
+            {
+              key: "id",
+              header: "ID",
+              width: 60,
+              align: "right",
+              headerAlign: "center",
+            },
+            {
+              key: "category",
+              header: "Category",
+              width: 150,
+              align: "center",
+              // 같은 카테고리를 병합하고 편집 가능하게
+              getCellMerge: (value: any, row: any, rowIndex: number) => {
+                if (rowIndex === 0) {
+                  return { rowSpan: 3 }; // Electronics: 3행
+                } else if (rowIndex === 3) {
+                  return { rowSpan: 2 }; // Books: 2행
+                } else if (rowIndex === 5) {
+                  return { rowSpan: 1 }; // Clothing: 1행
+                }
+                return null;
+              },
+              edit: {
+                editor: "TextBox",
+                editorProps: { placeholder: "카테고리" },
+              },
+            },
+            {
+              key: "product",
+              header: "Product",
+              width: 150,
+              edit: {
+                editor: "TextBox",
+                editorProps: { placeholder: "제품명" },
+              },
+            },
+            {
+              key: "price",
+              header: "Price",
+              width: 100,
+              align: "right",
+              render: (v: any) => `$${v}`,
+              edit: {
+                editor: "TextBox",
+                editorProps: { placeholder: "가격" },
+              },
+            },
+            {
+              key: "stock",
+              header: "Stock",
+              width: 100,
+              align: "center",
+              edit: {
+                editor: "SelectBox",
+                editorProps: { items: [50, 100, 150, 200, 300, 500] },
+              },
+            },
+          ]}
+        />
+      </div>
+    );
+  },
+};

@@ -21,6 +21,11 @@ export interface EditInfo<T = any> {
   editoProps?: any;
 }
 
+export interface CellMergeInfo {
+  rowSpan?: number;
+  colSpan?: number;
+}
+
 export interface TableColumn<T = any> {
   key: keyof T | string;
   header: React.ReactNode;
@@ -31,6 +36,8 @@ export interface TableColumn<T = any> {
   render?: (value: any, row: T, rowIndex: number) => React.ReactNode;
   edit?: EditInfo<T>;
   children?: TableColumn<T>[];
+  /** 셀 병합 정보를 반환하는 함수 */
+  getCellMerge?: (value: any, row: T, rowIndex: number) => CellMergeInfo | null;
 }
 
 export type SelectMode = "single" | "multiple" | "none";
@@ -312,6 +319,24 @@ export function Table<T = any>(props: TableProps<T>) {
     [activeCell]
   );
 
+  // 병합된 셀 영역 내에 activeCell이 있는지 확인
+  const isMergedCellActive = React.useCallback(
+    (rowIndex: number, colIndex: number, rowSpan: number, colSpan: number) => {
+      if (!activeCell) return false;
+
+      // activeCell이 병합된 영역 내에 있는지 확인
+      const isInRowRange =
+        activeCell.rowIndex >= rowIndex &&
+        activeCell.rowIndex < rowIndex + rowSpan;
+      const isInColRange =
+        activeCell.colIndex >= colIndex &&
+        activeCell.colIndex < colIndex + colSpan;
+
+      return isInRowRange && isInColRange;
+    },
+    [activeCell]
+  );
+
   const handleCellFocus = (rowIndex: number, colIndex: number) => () => {
     if (!editing) return;
     setActiveCell({ rowIndex, colIndex });
@@ -343,17 +368,26 @@ export function Table<T = any>(props: TableProps<T>) {
       return;
     }
 
+    // Check if focus is moving to another table cell
+    const isMovingToTableCell =
+      next instanceof Element ? next.closest(".min-ui-table-td") : null;
+    if (isMovingToTableCell) {
+      // Focus is moving to another cell, allow it without delay
+      return;
+    }
+
     // Delay blur to allow portal clicks (SelectBox dropdown)
     blurTimeoutRef.current = setTimeout(() => {
       // Check if focus is still outside the cell
       const currentlyFocused = document.activeElement;
 
-      // Check if currently focused element is a SelectBox dropdown
+      // Check if currently focused element is a SelectBox dropdown or another table cell
       const isSelectBoxDropdown = currentlyFocused?.closest(
         ".min-ui-selectbox-dropdown"
       );
+      const isAnotherTableCell = currentlyFocused?.closest(".min-ui-table-td");
 
-      if (!isSelectBoxDropdown) {
+      if (!isSelectBoxDropdown && !isAnotherTableCell) {
         setActiveCell(null);
       }
     }, 150);
@@ -420,291 +454,343 @@ export function Table<T = any>(props: TableProps<T>) {
                 </td>
               </tr>
             ) : (
-              data.map((row, rowIndex) => {
-                const key = rowKey ? rowKey(row, rowIndex) : rowIndex;
-                const isSelected = isRowSelected(row, rowIndex);
-                const rowClickable = selectMode !== "none";
-                const isRowDisabled = (row as any).disabled === true;
+              (() => {
+                // 병합된 셀을 추적하는 맵: "rowIndex-colIndex" -> true
+                const mergedCells = new Set<string>();
 
-                return (
-                  <tr
-                    key={key}
-                    className={`min-ui-table-tr ${isSelected ? "min-ui-table-tr-selected" : ""} ${rowClickable && selectMode !== "multiple" && !isRowDisabled ? "min-ui-table-tr-clickable" : ""} ${isRowDisabled ? "min-ui-table-tr-disabled" : ""}`.trim()}
-                    onClick={
-                      selectMode !== "multiple" && !isRowDisabled
-                        ? () => handleRowClick(row, rowIndex)
-                        : undefined
+                // 병합 정보를 미리 계산
+                data.forEach((row, ri) => {
+                  leafColumns.forEach((col, ci) => {
+                    const fieldKey = col.dataField ?? col.key;
+                    const value = (row as any)[fieldKey as any];
+                    const mergeInfo = col.getCellMerge?.(value, row, ri);
+
+                    if (mergeInfo) {
+                      const rowSpan = mergeInfo.rowSpan ?? 1;
+                      const colSpan = mergeInfo.colSpan ?? 1;
+
+                      // 병합된 영역의 모든 셀을 마크 (원본 제외)
+                      for (let r = 0; r < rowSpan; r++) {
+                        for (let c = 0; c < colSpan; c++) {
+                          if (r !== 0 || c !== 0) {
+                            mergedCells.add(`${ri + r}-${ci + c}`);
+                          }
+                        }
+                      }
                     }
-                  >
-                    {selectMode === "multiple" && (
-                      <td
-                        className="min-ui-table-td min-ui-table-select-cell"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent row click
-                        }}
-                      >
-                        <CheckBox
-                          value={isSelected}
-                          disabled={isRowDisabled}
-                          onChange={(e) => {
-                            e.stopPropagation(); // Prevent row click
-                            if (!isRowDisabled) {
-                              handleRowClick(row, rowIndex);
-                            }
-                          }}
+                  });
+                });
+
+                return data.map((row, rowIndex) => {
+                  const key = rowKey ? rowKey(row, rowIndex) : rowIndex;
+                  const isSelected = isRowSelected(row, rowIndex);
+                  const rowClickable = selectMode !== "none";
+                  const isRowDisabled = (row as any).disabled === true;
+
+                  return (
+                    <tr
+                      key={key}
+                      className={`min-ui-table-tr ${isSelected ? "min-ui-table-tr-selected" : ""} ${rowClickable && selectMode !== "multiple" && !isRowDisabled ? "min-ui-table-tr-clickable" : ""} ${isRowDisabled ? "min-ui-table-tr-disabled" : ""}`.trim()}
+                      onClick={
+                        selectMode !== "multiple" && !isRowDisabled
+                          ? () => handleRowClick(row, rowIndex)
+                          : undefined
+                      }
+                    >
+                      {selectMode === "multiple" && (
+                        <td
+                          className="min-ui-table-td min-ui-table-select-cell"
                           onClick={(e) => {
-                            e.stopPropagation(); // Prevent bubbling to row
+                            e.stopPropagation(); // Prevent row click
                           }}
-                        />
-                      </td>
-                    )}
-                    {leafColumns.map((col, colIndex) => {
-                      const fieldKey = col.dataField ?? col.key;
-                      const value = (row as any)[fieldKey as any];
-                      const edit = col.edit;
+                        >
+                          <CheckBox
+                            value={isSelected}
+                            disabled={isRowDisabled}
+                            onChange={(e) => {
+                              e.stopPropagation(); // Prevent row click
+                              if (!isRowDisabled) {
+                                handleRowClick(row, rowIndex);
+                              }
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent bubbling to row
+                            }}
+                          />
+                        </td>
+                      )}
+                      {leafColumns.map((col, colIndex) => {
+                        // 병합된 셀이면 렌더링하지 않음
+                        const cellKey = `${rowIndex}-${colIndex}`;
+                        if (mergedCells.has(cellKey)) {
+                          return null;
+                        }
 
-                      const defaultDisplay = col.render
-                        ? col.render(value, row, rowIndex)
-                        : (value as React.ReactNode);
+                        const fieldKey = col.dataField ?? col.key;
+                        const value = (row as any)[fieldKey as any];
+                        const edit = col.edit;
 
-                      const resolvedEditor: EditorType = (() => {
-                        if (!edit) return "none";
-                        const e = edit.editor as any;
-                        return typeof e === "function"
-                          ? e(row, rowIndex, value)
-                          : (e as EditorType);
-                      })();
+                        // 병합 정보 가져오기
+                        const mergeInfo = col.getCellMerge?.(
+                          value,
+                          row,
+                          rowIndex
+                        );
+                        const rowSpan = mergeInfo?.rowSpan ?? 1;
+                        const colSpan = mergeInfo?.colSpan ?? 1;
 
-                      // Build default textual display when edit is configured
-                      const toDisplayValue = (): React.ReactNode => {
-                        if (!edit) return defaultDisplay;
-                        if (edit.displayValue)
-                          return edit.displayValue(value, row, rowIndex);
+                        const defaultDisplay = col.render
+                          ? col.render(value, row, rowIndex)
+                          : (value as React.ReactNode);
 
-                        const props = {
-                          ...(edit.editoProps ?? {}),
-                          ...(edit.editorProps ?? {}),
-                        } as any;
+                        const resolvedEditor: EditorType = (() => {
+                          if (!edit) return "none";
+                          const e = edit.editor as any;
+                          return typeof e === "function"
+                            ? e(row, rowIndex, value)
+                            : (e as EditorType);
+                        })();
 
-                        const safeText = (): string => {
-                          if (value == null) return "";
-                          if (Array.isArray(value)) return value.join(", ");
-                          if (typeof value === "object") {
-                            const items = Array.isArray(props?.items)
-                              ? props.items
-                              : [];
-                            if (items.length > 0) {
+                        // Build default textual display when edit is configured
+                        const toDisplayValue = (): React.ReactNode => {
+                          if (!edit) return defaultDisplay;
+                          if (edit.displayValue)
+                            return edit.displayValue(value, row, rowIndex);
+
+                          const props = {
+                            ...(edit.editoProps ?? {}),
+                            ...(edit.editorProps ?? {}),
+                          } as any;
+
+                          const safeText = (): string => {
+                            if (value == null) return "";
+                            if (Array.isArray(value)) return value.join(", ");
+                            if (typeof value === "object") {
+                              const items = Array.isArray(props?.items)
+                                ? props.items
+                                : [];
+                              if (items.length > 0) {
+                                const normalized = items.map((it: any) =>
+                                  typeof it === "object" && it !== null
+                                    ? it
+                                    : { value: it, display: String(it) }
+                                );
+                                const rec = value as any;
+                                const labels = normalized
+                                  .filter((it: any) => rec?.[it.value] === true)
+                                  .map((it: any) => it.display);
+                                if (labels.length) return labels.join(", ");
+                              }
+                              try {
+                                return JSON.stringify(value);
+                              } catch {
+                                return String(value);
+                              }
+                            }
+                            return String(value);
+                          };
+
+                          switch (resolvedEditor) {
+                            case "TextBox":
+                              return value == null ? "" : String(value);
+                            case "SelectBox": {
+                              const items = Array.isArray(props.items)
+                                ? props.items
+                                : [];
                               const normalized = items.map((it: any) =>
                                 typeof it === "object" && it !== null
                                   ? it
                                   : { value: it, display: String(it) }
                               );
-                              const rec = value as any;
+                              if (props.multiple) {
+                                const arr = Array.isArray(value) ? value : [];
+                                const labels = arr
+                                  .map(
+                                    (v: any) =>
+                                      normalized.find(
+                                        (it: any) =>
+                                          String(it.value) === String(v)
+                                      )?.display ?? String(v)
+                                  )
+                                  .filter((x: any) => x != null && x !== "");
+                                return labels.length ? labels.join(", ") : "";
+                              }
+                              const found = normalized.find(
+                                (it: any) => String(it.value) === String(value)
+                              );
+                              return found
+                                ? found.display
+                                : value == null
+                                  ? ""
+                                  : String(value);
+                            }
+                            case "none":
+                              return React.isValidElement(defaultDisplay)
+                                ? defaultDisplay
+                                : safeText();
+                            case "CheckBox":
+                              return String(Boolean(value));
+                            case "CheckBoxGroup": {
+                              const items = Array.isArray(props.items)
+                                ? props.items
+                                : [];
+                              const normalized = items.map((it: any) =>
+                                typeof it === "object" && it !== null
+                                  ? it
+                                  : { value: it, display: String(it) }
+                              );
+                              const rec = (value as any) || {};
                               const labels = normalized
-                                .filter((it: any) => rec?.[it.value] === true)
+                                .filter((it: any) => rec[it.value] === true)
                                 .map((it: any) => it.display);
-                              if (labels.length) return labels.join(", ");
-                            }
-                            try {
-                              return JSON.stringify(value);
-                            } catch {
-                              return String(value);
-                            }
-                          }
-                          return String(value);
-                        };
-
-                        switch (resolvedEditor) {
-                          case "TextBox":
-                            return value == null ? "" : String(value);
-                          case "SelectBox": {
-                            const items = Array.isArray(props.items)
-                              ? props.items
-                              : [];
-                            const normalized = items.map((it: any) =>
-                              typeof it === "object" && it !== null
-                                ? it
-                                : { value: it, display: String(it) }
-                            );
-                            if (props.multiple) {
-                              const arr = Array.isArray(value) ? value : [];
-                              const labels = arr
-                                .map(
-                                  (v: any) =>
-                                    normalized.find(
-                                      (it: any) =>
-                                        String(it.value) === String(v)
-                                    )?.display ?? String(v)
-                                )
-                                .filter((x: any) => x != null && x !== "");
                               return labels.length ? labels.join(", ") : "";
                             }
-                            const found = normalized.find(
-                              (it: any) => String(it.value) === String(value)
-                            );
-                            return found
-                              ? found.display
-                              : value == null
-                                ? ""
-                                : String(value);
+                            default:
+                              return React.isValidElement(defaultDisplay)
+                                ? defaultDisplay
+                                : safeText();
                           }
-                          case "none":
-                            return React.isValidElement(defaultDisplay)
-                              ? defaultDisplay
-                              : safeText();
-                          case "CheckBox":
-                            return String(Boolean(value));
-                          case "CheckBoxGroup": {
-                            const items = Array.isArray(props.items)
-                              ? props.items
-                              : [];
-                            const normalized = items.map((it: any) =>
-                              typeof it === "object" && it !== null
-                                ? it
-                                : { value: it, display: String(it) }
-                            );
-                            const rec = (value as any) || {};
-                            const labels = normalized
-                              .filter((it: any) => rec[it.value] === true)
-                              .map((it: any) => it.display);
-                            return labels.length ? labels.join(", ") : "";
-                          }
-                          default:
-                            return React.isValidElement(defaultDisplay)
-                              ? defaultDisplay
-                              : safeText();
-                        }
-                      };
+                        };
 
-                      const displayContent = toDisplayValue();
+                        const displayContent = toDisplayValue();
 
-                      const mergedEditorProps = (() => {
-                        const base = { width: "100%" } as any;
-                        const legacy = (edit?.editoProps ?? {}) as any;
-                        const modern = (edit?.editorProps ?? {}) as any;
-                        const mergedStyle = {
-                          width: "100%",
-                          minWidth: 0,
-                          ...(legacy?.style ?? {}),
-                          ...(modern?.style ?? {}),
-                        } as React.CSSProperties;
-                        return {
-                          ...base,
-                          ...legacy,
-                          ...modern,
-                          style: mergedStyle,
-                        } as any;
-                      })();
+                        const mergedEditorProps = (() => {
+                          const base = { width: "100%" } as any;
+                          const legacy = (edit?.editoProps ?? {}) as any;
+                          const modern = (edit?.editorProps ?? {}) as any;
+                          const mergedStyle = {
+                            width: "100%",
+                            minWidth: 0,
+                            ...(legacy?.style ?? {}),
+                            ...(modern?.style ?? {}),
+                          } as React.CSSProperties;
+                          return {
+                            ...base,
+                            ...legacy,
+                            ...modern,
+                            style: mergedStyle,
+                          } as any;
+                        })();
 
-                      const handleEmit = (newValue: any) => {
-                        const fieldKey = col.dataField ?? col.key;
-                        onCellChange?.({
-                          rowIndex,
-                          colIndex,
-                          column: col,
-                          key: fieldKey,
-                          value: newValue,
-                          row,
-                        });
-                      };
+                        const handleEmit = (newValue: any) => {
+                          const fieldKey = col.dataField ?? col.key;
+                          onCellChange?.({
+                            rowIndex,
+                            colIndex,
+                            column: col,
+                            key: fieldKey,
+                            value: newValue,
+                            row,
+                          });
+                        };
 
-                      let cellContent: React.ReactNode = displayContent;
-                      const active =
-                        editing &&
-                        !isRowDisabled &&
-                        edit &&
-                        resolvedEditor !== "none" &&
-                        isCellActive(rowIndex, colIndex);
-                      if (active && edit) {
-                        switch (resolvedEditor) {
-                          case "TextBox": {
-                            cellContent = (
-                              <TextBox
-                                text={value == null ? "" : String(value)}
-                                onChange={(e) =>
-                                  handleEmit(
-                                    (e.target as HTMLInputElement).value
-                                  )
-                                }
-                                {...mergedEditorProps}
-                              />
-                            );
-                            break;
-                          }
-                          case "SelectBox": {
-                            cellContent = (
-                              <SelectBox
-                                value={value}
-                                onChange={(v) => handleEmit(v)}
-                                {...mergedEditorProps}
-                              />
-                            );
-                            break;
-                          }
-                          case "CheckBox": {
-                            cellContent = (
-                              <CheckBox
-                                value={Boolean(value)}
-                                onChange={(e) =>
-                                  handleEmit(
-                                    (e.target as HTMLInputElement).checked
-                                  )
-                                }
-                                {...mergedEditorProps}
-                              />
-                            );
-                            break;
-                          }
-                          case "CheckBoxGroup": {
-                            cellContent = (
-                              <CheckBoxGroup
-                                value={(value as any) ?? {}}
-                                onChange={(v) => handleEmit(v)}
-                                {...mergedEditorProps}
-                              />
-                            );
-                            break;
-                          }
-                          default: {
-                            cellContent = displayContent;
+                        let cellContent: React.ReactNode = displayContent;
+                        // 병합된 셀인 경우 병합 영역 내의 activeCell도 체크
+                        const active =
+                          editing &&
+                          !isRowDisabled &&
+                          edit &&
+                          resolvedEditor !== "none" &&
+                          (isCellActive(rowIndex, colIndex) ||
+                            isMergedCellActive(
+                              rowIndex,
+                              colIndex,
+                              rowSpan,
+                              colSpan
+                            ));
+                        if (active && edit) {
+                          switch (resolvedEditor) {
+                            case "TextBox": {
+                              cellContent = (
+                                <TextBox
+                                  text={value == null ? "" : String(value)}
+                                  onChange={(e) =>
+                                    handleEmit(
+                                      (e.target as HTMLInputElement).value
+                                    )
+                                  }
+                                  {...mergedEditorProps}
+                                />
+                              );
+                              break;
+                            }
+                            case "SelectBox": {
+                              cellContent = (
+                                <SelectBox
+                                  value={value}
+                                  onChange={(v) => handleEmit(v)}
+                                  {...mergedEditorProps}
+                                />
+                              );
+                              break;
+                            }
+                            case "CheckBox": {
+                              cellContent = (
+                                <CheckBox
+                                  value={Boolean(value)}
+                                  onChange={(e) =>
+                                    handleEmit(
+                                      (e.target as HTMLInputElement).checked
+                                    )
+                                  }
+                                  {...mergedEditorProps}
+                                />
+                              );
+                              break;
+                            }
+                            case "CheckBoxGroup": {
+                              cellContent = (
+                                <CheckBoxGroup
+                                  value={(value as any) ?? {}}
+                                  onChange={(v) => handleEmit(v)}
+                                  {...mergedEditorProps}
+                                />
+                              );
+                              break;
+                            }
+                            default: {
+                              cellContent = displayContent;
+                            }
                           }
                         }
-                      }
 
-                      const tdClasses: string[] = [
-                        "min-ui-table-td",
-                        `min-ui-text-${col.align ?? "left"}`,
-                      ];
-                      if (active) tdClasses.push("min-ui-table-td-editing");
-                      if (resolvedEditor === "SelectBox")
-                        tdClasses.push("min-ui-table-td-overflow-visible");
+                        const tdClasses: string[] = [
+                          "min-ui-table-td",
+                          `min-ui-text-${col.align ?? "left"}`,
+                        ];
+                        if (active) tdClasses.push("min-ui-table-td-editing");
+                        if (resolvedEditor === "SelectBox")
+                          tdClasses.push("min-ui-table-td-overflow-visible");
 
-                      return (
-                        <td
-                          key={colIndex}
-                          className={tdClasses.join(" ")}
-                          tabIndex={
-                            editing && edit && !isRowDisabled ? 0 : undefined
-                          }
-                          onFocus={
-                            !isRowDisabled
-                              ? handleCellFocus(rowIndex, colIndex)
-                              : undefined
-                          }
-                          onClick={
-                            !isRowDisabled
-                              ? handleCellFocus(rowIndex, colIndex)
-                              : undefined
-                          }
-                          onBlur={!isRowDisabled ? handleCellBlur : undefined}
-                        >
-                          {cellContent}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })
+                        return (
+                          <td
+                            key={colIndex}
+                            className={tdClasses.join(" ")}
+                            rowSpan={rowSpan}
+                            colSpan={colSpan}
+                            tabIndex={
+                              editing && edit && !isRowDisabled ? 0 : undefined
+                            }
+                            onFocus={
+                              !isRowDisabled
+                                ? handleCellFocus(rowIndex, colIndex)
+                                : undefined
+                            }
+                            onClick={
+                              !isRowDisabled
+                                ? handleCellFocus(rowIndex, colIndex)
+                                : undefined
+                            }
+                            onBlur={!isRowDisabled ? handleCellBlur : undefined}
+                          >
+                            {cellContent}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                });
+              })()
             )}
           </tbody>
         </table>
